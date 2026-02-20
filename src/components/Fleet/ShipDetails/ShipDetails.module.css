@@ -12,6 +12,8 @@
     padding: 0;
     display: grid;
     gap: 8px;
+    height: calc(100% - 30px);
+    overflow-y: scroll;
 }
 
 .detailListItem {

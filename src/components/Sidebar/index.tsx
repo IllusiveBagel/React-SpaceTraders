@@ -17,6 +17,11 @@ const Sidebar = () => {
                         Fleet
                     </Link>
                 </li>
+                <li>
+                    <Link className={styles.link} to="/systems">
+                        Systems
+                    </Link>
+                </li>
             </ul>
         </div>
     );

@@ -1,0 +1,117 @@
+.systems {
+    width: 100%;
+    height: calc(100vh - 132px);
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 22px 48px rgba(2, 6, 23, 0.55);
+    position: relative;
+}
+
+.title {
+    margin: 0;
+    font-size: 1.5rem;
+    color: var(--text-primary);
+}
+
+.list {
+    width: 100%;
+    flex: 1;
+    display: grid;
+    gap: 10px;
+    overflow-y: scroll;
+    padding-bottom: 72px;
+    padding-top: 8px;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    position: absolute;
+    left: 50%;
+    bottom: 16px;
+    transform: translateX(-50%);
+    z-index: 2;
+}
+
+.item {
+    display: grid;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+}
+
+.itemLink {
+    text-decoration: none;
+    color: inherit;
+    transition:
+        border-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.itemLink:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+}
+
+.itemLink:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.itemHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.name {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+
+.symbol {
+    margin: 4px 0 0;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.type {
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: rgba(15, 23, 42, 0.6);
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.itemDetails {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+}
+
+.label {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.value {
+    margin: 4px 0 0;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+}

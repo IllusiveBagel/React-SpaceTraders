@@ -1,11 +1,7 @@
 import type { Ship } from "types/fleet";
 
 import styles from "./ShipDetails.module.css";
-import {
-    displayValue,
-    formatDateTime,
-    formatRequirements,
-} from "helpers/fleetFormatters";
+import { formatDateTime, formatRequirements } from "helpers/fleetFormatters";
 import DetailBlock from "components/Fleet/DetailBlock";
 import DetailField from "components/Fleet/DetailField";
 
@@ -114,105 +110,6 @@ const ShipDetails = ({ ship }: ShipDetailsProps) => {
                     value={formatRequirements(ship.engine.requirements)}
                 />
                 <p className={styles.detailText}>{ship.engine.description}</p>
-            </DetailBlock>
-
-            <DetailBlock title="Modules" long>
-                {ship.modules.length > 0 ? (
-                    <ul className={styles.detailList}>
-                        {ship.modules.map((module) => (
-                            <li
-                                className={styles.detailListItem}
-                                key={`${ship.symbol}-${module.symbol}`}
-                            >
-                                <DetailField
-                                    label="Module"
-                                    value={`${module.name} (${module.symbol})`}
-                                />
-                                <DetailField
-                                    label="Capacity"
-                                    value={displayValue(module.capacity)}
-                                />
-                                <DetailField
-                                    label="Range"
-                                    value={displayValue(module.range)}
-                                />
-                                <DetailField
-                                    label="Requirements"
-                                    value={formatRequirements(
-                                        module.requirements,
-                                    )}
-                                />
-                                <p className={styles.detailText}>
-                                    {module.description}
-                                </p>
-                            </li>
-                        ))}
-                    </ul>
-                ) : (
-                    <p className={styles.detailText}>No modules installed.</p>
-                )}
-            </DetailBlock>
-
-            <DetailBlock title="Mounts" long>
-                {ship.mounts.length > 0 ? (
-                    <ul className={styles.detailList}>
-                        {ship.mounts.map((mount) => (
-                            <li
-                                className={styles.detailListItem}
-                                key={`${ship.symbol}-${mount.symbol}`}
-                            >
-                                <DetailField
-                                    label="Mount"
-                                    value={`${mount.name} (${mount.symbol})`}
-                                />
-                                <DetailField
-                                    label="Strength"
-                                    value={mount.strength}
-                                />
-                                <DetailField
-                                    label="Deposits"
-                                    value={
-                                        (mount.deposits?.length ?? 0) > 0
-                                            ? (mount.deposits?.join(", ") ??
-                                              "None")
-                                            : "None"
-                                    }
-                                />
-                                <DetailField
-                                    label="Requirements"
-                                    value={formatRequirements(
-                                        mount.requirements,
-                                    )}
-                                />
-                                <p className={styles.detailText}>
-                                    {mount.description}
-                                </p>
-                            </li>
-                        ))}
-                    </ul>
-                ) : (
-                    <p className={styles.detailText}>No mounts installed.</p>
-                )}
-            </DetailBlock>
-
-            <DetailBlock title="Cargo Inventory" long>
-                <DetailField label="Capacity" value={ship.cargo.capacity} />
-                <DetailField label="Used Units" value={ship.cargo.units} />
-
-                {ship.cargo.inventory.length > 0 ? (
-                    <ul className={styles.inventory}>
-                        {ship.cargo.inventory.map((item) => (
-                            <li key={`${ship.symbol}-${item.symbol}`}>
-                                {item.name} ({item.units})
-                                {item.description
-                                    ? ` • ${item.description}`
-                                    : ""}
-                            </li>
-                        ))}
-                    </ul>
-                ) : (
-                    <p className={styles.detailText}>Cargo bay is empty.</p>
-                )}
             </DetailBlock>
 
             <DetailBlock title="Fuel & Cooldown">

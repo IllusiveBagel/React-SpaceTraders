@@ -1,0 +1,143 @@
+.system {
+    width: 100%;
+    height: calc(100vh - 132px);
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 22px 48px rgba(2, 6, 23, 0.55);
+    overflow: hidden;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.breadcrumb {
+    margin: 0 0 6px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.title {
+    margin: 0;
+    font-size: 1.7rem;
+    color: var(--text-primary);
+}
+
+.symbol {
+    margin: 6px 0 0;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.type {
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: rgba(15, 23, 42, 0.6);
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+}
+
+.statLabel {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.statValue {
+    margin: 6px 0 0;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.sections {
+    display: grid;
+    gap: 16px;
+    flex: 1;
+    min-height: 0;
+}
+
+.section {
+    display: grid;
+    gap: 12px;
+}
+
+.sectionTitle {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+
+.grid {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    overflow-y: auto;
+    max-height: clamp(260px, 45vh, 520px);
+    padding-bottom: 6px;
+}
+
+.card {
+    border-radius: 12px;
+    padding: 12px 14px;
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    display: grid;
+    gap: 6px;
+}
+
+.cardTitle {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+}
+
+.cardMeta {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.factions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.faction {
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: rgba(15, 23, 42, 0.6);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+}
+
+.emptyState {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}

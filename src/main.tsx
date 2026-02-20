@@ -6,6 +6,9 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Layout from "components/Layout";
 import Home from "pages/Home";
 import Fleet from "pages/Fleet";
+import Systems from "pages/Systems";
+import System from "pages/System";
+import Ship from "pages/Ship";
 
 import "./index.css";
 
@@ -20,6 +23,18 @@ const router = createBrowserRouter([
             {
                 path: "/fleet",
                 element: <Fleet />,
+            },
+            {
+                path: "/fleet/:shipSymbol",
+                element: <Ship />,
+            },
+            {
+                path: "/systems",
+                element: <Systems />,
+            },
+            {
+                path: "/systems/:systemSymbol",
+                element: <System />,
             },
         ],
     },

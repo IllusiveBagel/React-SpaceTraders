@@ -5,6 +5,23 @@
     padding: 16px;
 }
 
+.cardLink {
+    cursor: pointer;
+    transition:
+        border-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.cardLink:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+}
+
+.cardLink:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
 .cardTop {
     display: flex;
     justify-content: space-between;
@@ -77,20 +94,21 @@
     word-break: break-word;
 }
 
-.details {
-    margin-top: 12px;
-    border-top: 1px solid var(--border);
-    padding-top: 12px;
+.locationLink {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.92rem;
+    text-decoration: none;
+    word-break: break-word;
 }
 
-.summary {
-    cursor: pointer;
+.locationLink:hover {
     color: var(--accent);
-    font-weight: 600;
-    font-size: 0.9rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
+}
+
+.locationLink:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
 }
 
 @media (max-width: 900px) {

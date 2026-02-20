@@ -1,8 +1,9 @@
+import { Link, useNavigate } from "react-router-dom";
+
 import type { Ship } from "types/fleet";
 
 import styles from "./ShipCard.module.css";
 import { formatPercent } from "helpers/fleetFormatters";
-import ShipDetails from "components/Fleet/ShipDetails";
 
 type ShipCardProps = {
     ship: Ship;
@@ -15,8 +16,27 @@ const getStatusClass = (ship: Ship) => {
 };
 
 const ShipCard = ({ ship }: ShipCardProps) => {
+    const navigate = useNavigate();
+
+    const handleCardClick = () => {
+        navigate(`/fleet/${ship.symbol}`);
+    };
+
+    const handleCardKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
+        if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            navigate(`/fleet/${ship.symbol}`);
+        }
+    };
+
     return (
-        <article className={styles.card}>
+        <article
+            className={`${styles.card} ${styles.cardLink}`}
+            onClick={handleCardClick}
+            onKeyDown={handleCardKeyDown}
+            role="link"
+            tabIndex={0}
+        >
             <div className={styles.cardTop}>
                 <div>
                     <h2 className={styles.shipName}>
@@ -34,9 +54,14 @@ const ShipCard = ({ ship }: ShipCardProps) => {
             <div className={styles.metrics}>
                 <div className={styles.metric}>
                     <span className={styles.label}>Location</span>
-                    <span className={styles.value}>
+                    <Link
+                        to={`/systems/${ship.nav.systemSymbol}`}
+                        className={styles.locationLink}
+                        onClick={(event) => event.stopPropagation()}
+                        onKeyDown={(event) => event.stopPropagation()}
+                    >
                         {ship.nav.waypointSymbol}
-                    </span>
+                    </Link>
                 </div>
                 <div className={styles.metric}>
                     <span className={styles.label}>Fuel</span>
@@ -60,11 +85,6 @@ const ShipCard = ({ ship }: ShipCardProps) => {
                     </span>
                 </div>
             </div>
-
-            <details className={styles.details}>
-                <summary className={styles.summary}>More details</summary>
-                <ShipDetails ship={ship} />
-            </details>
         </article>
     );
 };
