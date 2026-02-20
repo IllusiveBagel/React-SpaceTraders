@@ -1,0 +1,151 @@
+.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.cardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.contractType {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.factionSymbol {
+    margin: 4px 0 0;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    text-transform: uppercase;
+}
+
+.statusFulfilled {
+    background: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+    border: 1px solid rgba(74, 222, 128, 0.35);
+}
+
+.statusAccepted {
+    background: rgba(96, 165, 250, 0.15);
+    color: #93c5fd;
+    border: 1px solid rgba(147, 197, 253, 0.35);
+}
+
+.statusPending {
+    background: rgba(251, 146, 60, 0.15);
+    color: #fb923c;
+    border: 1px solid rgba(253, 186, 116, 0.35);
+}
+
+.cardBody {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.section {
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sectionLabel {
+    color: var(--accent);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+}
+
+.paymentGrid,
+.deadlineGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.paymentGrid > div,
+.deadlineGrid > div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.label {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.value {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.85rem;
+    word-break: break-word;
+}
+
+.deliveryList {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.deliveryItem {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px;
+    background: rgba(30, 41, 59, 0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.deliveryMeta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.deliveryMeta .label {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@media (max-width: 900px) {
+    .card {
+        padding: 12px;
+        gap: 10px;
+    }
+
+    .paymentGrid,
+    .deadlineGrid {
+        grid-template-columns: 1fr;
+    }
+}

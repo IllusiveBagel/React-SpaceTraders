@@ -1,0 +1,16 @@
+.layout {
+    min-height: 100vh;
+}
+
+.main {
+    margin-left: var(--sidebar-width);
+    min-height: calc(100vh - var(--header-height));
+    padding: calc(var(--header-height) + 28px) 32px 32px;
+}
+
+@media (max-width: 900px) {
+    .main {
+        margin-left: 0;
+        padding: calc(var(--header-height) + 20px) 16px 16px;
+    }
+}

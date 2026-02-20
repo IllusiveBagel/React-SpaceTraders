@@ -1,0 +1,10 @@
+.detailText {
+    margin: 0 0 6px;
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+    line-height: 1.35;
+}
+
+.detailText:last-child {
+    margin-bottom: 0;
+}

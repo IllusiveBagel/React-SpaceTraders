@@ -1,0 +1,64 @@
+.contracts {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 22px 48px rgba(2, 6, 23, 0.55);
+}
+
+.title {
+    margin: 0;
+    font-size: 1.5rem;
+    color: var(--text-primary);
+}
+
+.list {
+    width: 100%;
+    display: grid;
+    gap: 12px;
+    min-height: 0;
+    overflow: auto;
+    flex: 1;
+}
+
+.empty {
+    color: var(--text-secondary);
+    text-align: center;
+    padding: 32px 16px;
+    margin: 0;
+}
+
+.loading {
+    width: 100%;
+    min-height: 50vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+}
+
+.error {
+    width: 100%;
+    min-height: 50vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.1rem;
+    color: #f87171;
+}
+
+@media (max-width: 900px) {
+    .contracts {
+        padding: 16px;
+    }
+
+    .title {
+        font-size: 1.25rem;
+    }
+}
