@@ -1,7 +1,7 @@
 type Contract = {
     id: string;
     factionSymbol: string;
-    type: "PROCUREMENT";
+    type: string;
     terms: {
         deadline: string;
         payment: {

@@ -1,9 +1,11 @@
 import useGetShips from "hooks/fleet/useGetShips";
 import ShipCard from "components/Fleet/ShipCard";
-
+import { usePageTitle } from "components/Layout/PageTitleContext";
 import styles from "./Fleet.module.css";
 
 const Fleet = () => {
+    usePageTitle("Fleet");
+
     const { data: ships, isLoading, error } = useGetShips();
 
     if (isLoading) {
@@ -17,7 +19,6 @@ const Fleet = () => {
     return (
         <section className={styles.fleet}>
             <div className={styles.header}>
-                <h1 className={styles.title}>Fleet</h1>
                 <p className={styles.subtitle}>
                     {ships?.length ?? 0} ship{ships?.length === 1 ? "" : "s"}
                 </p>

@@ -14,6 +14,7 @@ export default defineConfig({
             assets: path.resolve(__dirname, "src/assets"),
             types: path.resolve(__dirname, "src/types"),
             pages: path.resolve(__dirname, "src/pages"),
+            automation: path.resolve(__dirname, "src/automation"),
         },
     },
 });

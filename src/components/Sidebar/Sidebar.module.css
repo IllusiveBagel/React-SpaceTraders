@@ -16,6 +16,7 @@
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--text-secondary);
+    text-align: center;
 }
 
 .nav {

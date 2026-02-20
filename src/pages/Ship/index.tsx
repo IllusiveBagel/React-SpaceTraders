@@ -1,14 +1,22 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import ShipDetails from "components/Fleet/ShipDetails";
 import DetailField from "components/Fleet/DetailField";
 import useGetShip from "hooks/fleet/useGetShip";
-import { displayValue, formatRequirements } from "helpers/fleetFormatters";
+import useShipActions from "hooks/fleet/useShipActions";
+import useTransitProgress from "hooks/fleet/useTransitProgress";
+import ProgressBar from "components/Home/ProgressBar";
+import { usePageTitle } from "components/Layout/PageTitleContext";
+import {
+    displayValue,
+    formatDuration,
+    formatRequirements,
+} from "helpers/fleetFormatters";
 
 import styles from "./Ship.module.css";
 
-type ShipTab = "info" | "modules" | "mounts" | "cargo";
+type ShipTab = "info" | "controls" | "modules" | "mounts" | "cargo";
 
 const getStatusClass = (status: string) => {
     return status === "IN_TRANSIT" ? styles.statusTransit : styles.statusDocked;
@@ -17,7 +25,16 @@ const getStatusClass = (status: string) => {
 const Ship = () => {
     const { shipSymbol } = useParams();
     const { data: ship, isLoading, error } = useGetShip(shipSymbol);
+    const { orbit, dock, navigate, extract, refuel, sell, isWorking } =
+        useShipActions(shipSymbol);
+    const transit = useTransitProgress(ship);
     const [activeTab, setActiveTab] = useState<ShipTab>("info");
+    const [navigateTarget, setNavigateTarget] = useState("");
+    const [sellSymbol, setSellSymbol] = useState("");
+    const [sellUnits, setSellUnits] = useState("");
+    const [refuelFromCargo, setRefuelFromCargo] = useState(false);
+    const [actionMessage, setActionMessage] = useState<string | null>(null);
+    const [actionError, setActionError] = useState<string | null>(null);
     const cargoPercent = ship
         ? ship.cargo.capacity > 0
             ? Math.min(
@@ -27,6 +44,96 @@ const Ship = () => {
             : 0
         : 0;
 
+    const cargoSymbols = useMemo(() => {
+        if (!ship) {
+            return [] as string[];
+        }
+
+        return ship.cargo.inventory.map((item) => item.symbol);
+    }, [ship]);
+    const defaultSellSymbol = useMemo(
+        () => cargoSymbols[0] ?? "",
+        [cargoSymbols],
+    );
+    const sellSymbolValue = sellSymbol || defaultSellSymbol;
+    const fuelCargoUnits = useMemo(() => {
+        if (!ship) {
+            return 0;
+        }
+
+        return (
+            ship.cargo.inventory.find((item) => item.symbol === "FUEL")
+                ?.units ?? 0
+        );
+    }, [ship]);
+    const hasFuelCargo = fuelCargoUnits > 0;
+
+    useEffect(() => {
+        if (!hasFuelCargo && refuelFromCargo) {
+            setRefuelFromCargo(false);
+        }
+    }, [hasFuelCargo, refuelFromCargo]);
+
+    usePageTitle(ship?.registration.name ?? "Ship");
+
+    const handleAction = async (
+        action: () => Promise<unknown>,
+        message: string,
+    ) => {
+        setActionError(null);
+        setActionMessage(null);
+
+        try {
+            await action();
+            setActionMessage(message);
+        } catch (err) {
+            setActionError(
+                err instanceof Error ? err.message : "Action failed.",
+            );
+        }
+    };
+
+    const handleNavigate = async () => {
+        if (!navigateTarget.trim()) {
+            setActionError("Enter a waypoint symbol to navigate.");
+            return;
+        }
+
+        await handleAction(
+            () => navigate(navigateTarget.trim()),
+            `Navigating to ${navigateTarget.trim()}.`,
+        );
+    };
+
+    const handleSell = async () => {
+        if (!ship) {
+            return;
+        }
+
+        const trimmedSymbol = sellSymbolValue.trim();
+        if (!trimmedSymbol) {
+            setActionError("Enter a cargo symbol to sell.");
+            return;
+        }
+
+        const matchingUnits =
+            ship.cargo.inventory.find((item) => item.symbol === trimmedSymbol)
+                ?.units ?? 0;
+        const requestedUnits = sellUnits.trim()
+            ? Number(sellUnits)
+            : matchingUnits;
+
+        if (!requestedUnits || Number.isNaN(requestedUnits)) {
+            setActionError("Enter a valid unit count to sell.");
+            return;
+        }
+
+        await handleAction(
+            () => sell({ symbol: trimmedSymbol, units: requestedUnits }),
+            `Selling ${requestedUnits} ${trimmedSymbol}.`,
+        );
+    };
+
     return (
         <section className={styles.ship}>
             <div className={styles.header}>
@@ -35,9 +142,6 @@ const Ship = () => {
                         <Link to="/fleet">Fleet</Link>
                         {shipSymbol ? ` / ${shipSymbol}` : ""}
                     </p>
-                    <h1 className={styles.title}>
-                        {ship?.registration.name ?? "Ship"}
-                    </h1>
                 </div>
                 {ship?.nav.status && (
                     <span
@@ -98,7 +202,42 @@ const Ship = () => {
                                 {ship.crew.capacity}
                             </p>
                         </div>
+                        <div>
+                            <p className={styles.statLabel}>Cooldown</p>
+                            <p className={styles.statValue}>
+                                {ship.cooldown.remainingSeconds > 0
+                                    ? `${ship.cooldown.remainingSeconds}s`
+                                    : "Ready"}
+                            </p>
+                        </div>
                     </div>
+
+                    {transit.isInTransit && (
+                        <section className={styles.transitPanel}>
+                            <div className={styles.transitHeader}>
+                                <div>
+                                    <h2 className={styles.transitTitle}>
+                                        Transit progress
+                                    </h2>
+                                    <p className={styles.transitSubtitle}>
+                                        Arriving in{" "}
+                                        {formatDuration(
+                                            transit.remainingSeconds,
+                                        )}
+                                    </p>
+                                </div>
+                                {transit.arrivalTime && (
+                                    <span className={styles.transitEta}>
+                                        ETA {transit.arrivalTime}
+                                    </span>
+                                )}
+                            </div>
+                            <ProgressBar
+                                current={transit.elapsedSeconds}
+                                total={transit.totalSeconds}
+                            />
+                        </section>
+                    )}
 
                     <div className={styles.tabs} role="tablist">
                         <button
@@ -113,6 +252,19 @@ const Ship = () => {
                             id="ship-tab-info-button"
                         >
                             Ship info
+                        </button>
+                        <button
+                            type="button"
+                            className={`${styles.tab} ${
+                                activeTab === "controls" ? styles.tabActive : ""
+                            }`}
+                            onClick={() => setActiveTab("controls")}
+                            role="tab"
+                            aria-selected={activeTab === "controls"}
+                            aria-controls="ship-tab-controls"
+                            id="ship-tab-controls-button"
+                        >
+                            Controls
                         </button>
                         <button
                             type="button"
@@ -163,6 +315,230 @@ const Ship = () => {
                                 aria-labelledby="ship-tab-info-button"
                             >
                                 <ShipDetails ship={ship} />
+                            </div>
+                        )}
+
+                        {activeTab === "controls" && (
+                            <div
+                                id="ship-tab-controls"
+                                role="tabpanel"
+                                aria-labelledby="ship-tab-controls-button"
+                            >
+                                <section className={styles.controls}>
+                                    <div className={styles.controlsHeader}>
+                                        <div>
+                                            <h2
+                                                className={styles.controlsTitle}
+                                            >
+                                                Manual controls
+                                            </h2>
+                                            <p
+                                                className={
+                                                    styles.controlsSubtitle
+                                                }
+                                            >
+                                                Orbit, extract, and sell on
+                                                demand.
+                                            </p>
+                                        </div>
+                                        <div className={styles.controlsStatus}>
+                                            {actionError && (
+                                                <span
+                                                    className={
+                                                        styles.controlsError
+                                                    }
+                                                >
+                                                    {actionError}
+                                                </span>
+                                            )}
+                                            {actionMessage && (
+                                                <span
+                                                    className={
+                                                        styles.controlsMessage
+                                                    }
+                                                >
+                                                    {actionMessage}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className={styles.controlsGrid}>
+                                        <div className={styles.controlCard}>
+                                            <p className={styles.controlTitle}>
+                                                Navigation
+                                            </p>
+                                            <div className={styles.controlRow}>
+                                                <input
+                                                    value={navigateTarget}
+                                                    onChange={(event) =>
+                                                        setNavigateTarget(
+                                                            event.target.value,
+                                                        )
+                                                    }
+                                                    placeholder="Waypoint symbol"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={handleNavigate}
+                                                    disabled={isWorking}
+                                                >
+                                                    Navigate
+                                                </button>
+                                            </div>
+                                            <div className={styles.controlRow}>
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        handleAction(
+                                                            () => orbit(),
+                                                            "Orbiting ship.",
+                                                        )
+                                                    }
+                                                    disabled={isWorking}
+                                                >
+                                                    Orbit
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        handleAction(
+                                                            () => dock(),
+                                                            "Docking ship.",
+                                                        )
+                                                    }
+                                                    disabled={isWorking}
+                                                >
+                                                    Dock
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        handleAction(
+                                                            () =>
+                                                                refuel(
+                                                                    refuelFromCargo,
+                                                                ),
+                                                            refuelFromCargo
+                                                                ? "Refueling ship from cargo."
+                                                                : "Refueling ship.",
+                                                        )
+                                                    }
+                                                    disabled={isWorking}
+                                                >
+                                                    Refuel
+                                                </button>
+                                                <label
+                                                    className={
+                                                        styles.controlToggle
+                                                    }
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={
+                                                            refuelFromCargo
+                                                        }
+                                                        onChange={(event) =>
+                                                            setRefuelFromCargo(
+                                                                event.target
+                                                                    .checked,
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            isWorking ||
+                                                            !hasFuelCargo
+                                                        }
+                                                    />
+                                                    Use cargo fuel
+                                                </label>
+                                            </div>
+                                            <p className={styles.controlHint}>
+                                                {hasFuelCargo
+                                                    ? `Cargo fuel: ${fuelCargoUnits} units`
+                                                    : "No fuel in cargo"}
+                                            </p>
+                                        </div>
+
+                                        <div className={styles.controlCard}>
+                                            <p className={styles.controlTitle}>
+                                                Mining
+                                            </p>
+                                            <div className={styles.controlRow}>
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        handleAction(
+                                                            () => extract(),
+                                                            "Extracting resources.",
+                                                        )
+                                                    }
+                                                    disabled={isWorking}
+                                                >
+                                                    Extract
+                                                </button>
+                                            </div>
+                                            <p className={styles.controlHint}>
+                                                Cooldown:{" "}
+                                                {ship.cooldown.remainingSeconds}
+                                                s
+                                            </p>
+                                        </div>
+
+                                        <div className={styles.controlCard}>
+                                            <p className={styles.controlTitle}>
+                                                Sell cargo
+                                            </p>
+                                            <div className={styles.controlRow}>
+                                                <input
+                                                    list="cargo-symbols"
+                                                    value={sellSymbolValue}
+                                                    onChange={(event) =>
+                                                        setSellSymbol(
+                                                            event.target.value.toUpperCase(),
+                                                        )
+                                                    }
+                                                    placeholder="Cargo symbol"
+                                                />
+                                                <input
+                                                    type="number"
+                                                    min={1}
+                                                    value={sellUnits}
+                                                    onChange={(event) =>
+                                                        setSellUnits(
+                                                            event.target.value,
+                                                        )
+                                                    }
+                                                    placeholder="Units"
+                                                />
+                                            </div>
+                                            <div className={styles.controlRow}>
+                                                <button
+                                                    type="button"
+                                                    onClick={handleSell}
+                                                    disabled={isWorking}
+                                                >
+                                                    Sell
+                                                </button>
+                                                <span
+                                                    className={
+                                                        styles.controlHint
+                                                    }
+                                                >
+                                                    {ship.cargo.units}/
+                                                    {ship.cargo.capacity} units
+                                                </span>
+                                            </div>
+                                            <datalist id="cargo-symbols">
+                                                {cargoSymbols.map((symbol) => (
+                                                    <option
+                                                        key={symbol}
+                                                        value={symbol}
+                                                    />
+                                                ))}
+                                            </datalist>
+                                        </div>
+                                    </div>
+                                </section>
                             </div>
                         )}
 

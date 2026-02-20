@@ -31,7 +31,8 @@
       "hooks/*": ["./src/hooks/*"],
       "services/*": ["./src/services/*"],
       "types/*": ["./src/types/*"],
-      "pages/*": ["./src/pages/*"]
+      "pages/*": ["./src/pages/*"],
+      "automation/*": ["./src/automation/*"]
     }
   },
   "include": ["src"]

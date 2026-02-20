@@ -1,0 +1,393 @@
+.map {
+    position: relative;
+    width: 100%;
+    height: calc(100vh - var(--header-height) - 28px - 32px - 16px);
+    margin-bottom: 16px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(6px);
+}
+
+.subtitle {
+    margin: 6px 0 0;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+
+.selector {
+    display: grid;
+    gap: 6px;
+    min-width: 240px;
+}
+
+.label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.select {
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: rgba(15, 23, 42, 0.4);
+    color: var(--text-primary);
+    padding: 8px 12px;
+}
+
+.select:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.35);
+}
+
+.metaLabel {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.metaValue {
+    margin: 6px 0 0;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.mapViewport {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    background:
+        radial-gradient(
+            circle at 12% 20%,
+            rgba(96, 165, 250, 0.12),
+            transparent 45%
+        ),
+        radial-gradient(
+            circle at 80% 78%,
+            rgba(45, 212, 191, 0.12),
+            transparent 40%
+        ),
+        repeating-linear-gradient(
+            to right,
+            rgba(148, 163, 184, 0.2),
+            rgba(148, 163, 184, 0.2) 1px,
+            transparent 1px,
+            transparent 60px
+        ),
+        repeating-linear-gradient(
+            to bottom,
+            rgba(148, 163, 184, 0.2),
+            rgba(148, 163, 184, 0.2) 1px,
+            transparent 1px,
+            transparent 60px
+        ),
+        rgba(2, 6, 23, 0.9);
+}
+
+.mapViewport:active {
+    cursor: grabbing;
+}
+
+.mapContent {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    overflow: hidden;
+    transform-origin: center;
+    will-change: transform;
+    user-select: none;
+}
+
+.overlay {
+    position: absolute;
+    inset: 0;
+    padding: 24px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto 1fr auto;
+    gap: 16px;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.overlay > * {
+    pointer-events: auto;
+}
+
+.header {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: start;
+    align-self: start;
+    min-width: 240px;
+}
+
+.meta {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+    align-self: start;
+    max-width: 520px;
+    background: rgba(15, 23, 42, 0.78);
+    backdrop-filter: blur(6px);
+}
+
+.waypoint {
+    position: absolute;
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+    transform: translate(-50%, -50%);
+    user-select: none;
+    pointer-events: none;
+}
+
+.waypointLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.2s ease;
+    pointer-events: auto;
+    position: relative;
+    z-index: 2;
+}
+
+.waypointLink:hover {
+    transform: scale(1.03);
+}
+
+.waypointLink:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 4px;
+}
+
+.point {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: #38bdf8;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.7);
+    border: 1px solid rgba(226, 232, 240, 0.6);
+    transform: scale(var(--inverse-scale, 1));
+    transform-origin: center;
+}
+
+.pointLabel {
+    display: none;
+}
+
+.waypointLink:hover + .pointLabel,
+.waypointLink:focus-visible + .pointLabel {
+    opacity: 1;
+}
+
+.shipMarker {
+    position: absolute;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transform: translate(-50%, -50%)
+        translate(var(--ship-offset-x, 0px), var(--ship-offset-y, 0px));
+    pointer-events: none;
+    user-select: none;
+    z-index: 3;
+}
+
+.shipHit {
+    display: inline-flex;
+    align-items: center;
+    pointer-events: auto;
+    cursor: pointer;
+    position: relative;
+    z-index: 3;
+    text-decoration: none;
+}
+
+.shipDot {
+    width: 12px;
+    height: 12px;
+    border-radius: 999px;
+    background: #f97316;
+    box-shadow: 0 0 12px rgba(249, 115, 22, 0.75);
+    border: 1px solid rgba(254, 215, 170, 0.7);
+    transform: scale(var(--inverse-scale, 1));
+    transform-origin: center;
+}
+
+.shipLabel {
+    display: none;
+}
+
+.hoverLabel {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform: translate(-50%, -50%)
+        translate(var(--label-offset-x, 0px), var(--label-offset-y, 0px))
+        translateX(calc(12px + 3px * var(--inverse-scale, 1)))
+        scale(var(--inverse-scale, 1));
+    transform-origin: left center;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 20;
+}
+
+.hoverLabelWaypoint {
+    font-size: 0.72rem;
+    color: var(--text-primary);
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 4px 6px;
+}
+
+.hoverLabelShip {
+    font-size: 0.7rem;
+    color: #ffedd5;
+    background: rgba(30, 41, 59, 0.9);
+    border: 1px solid rgba(249, 115, 22, 0.5);
+    border-radius: 8px;
+    padding: 3px 6px;
+}
+
+.legend {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: rgba(15, 23, 42, 0.7);
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    grid-column: 2;
+    grid-row: 3;
+    justify-self: end;
+    align-self: end;
+    max-width: 520px;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.35);
+}
+
+.legendDot {
+    display: inline-flex;
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    margin-right: 6px;
+    background: #38bdf8;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+}
+
+.legendMeta {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+}
+
+.statusPanel {
+    grid-column: 1;
+    grid-row: 3;
+    justify-self: start;
+    align-self: end;
+    display: grid;
+    gap: 8px;
+    max-width: 360px;
+}
+
+.state,
+.error {
+    margin: 0;
+    border-radius: 10px;
+    padding: 10px 12px;
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    backdrop-filter: blur(6px);
+}
+
+.error {
+    border-color: rgba(248, 113, 113, 0.6);
+    color: #fecaca;
+}
+
+@media (max-width: 900px) {
+    .map {
+        height: calc(100vh - var(--header-height) - 20px - 16px - 12px);
+        margin-bottom: 12px;
+    }
+
+    .overlay {
+        padding: 16px;
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto auto 1fr auto;
+    }
+
+    .header {
+        grid-column: 1;
+        grid-row: 1;
+        min-width: unset;
+    }
+
+    .meta {
+        grid-column: 1;
+        grid-row: 2;
+        justify-self: stretch;
+        max-width: unset;
+    }
+
+    .statusPanel {
+        grid-column: 1;
+        grid-row: 4;
+        max-width: unset;
+    }
+
+    .legend {
+        grid-column: 1;
+        grid-row: 3;
+        justify-self: start;
+        max-width: unset;
+    }
+
+    .mapContent {
+        border-radius: 0;
+    }
+
+    .legend {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

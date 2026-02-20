@@ -3,10 +3,13 @@ import { Link } from "react-router-dom";
 
 import Pagination from "components/Pagination";
 import useGetSystems from "hooks/systems/useGetSystems";
+import { usePageTitle } from "components/Layout/PageTitleContext";
 
 import styles from "./Systems.module.css";
 
 const Systems = () => {
+    usePageTitle("Systems");
+
     const [page, setPage] = useState(1);
     const limit = 20;
 
@@ -16,7 +19,6 @@ const Systems = () => {
 
     return (
         <div className={styles.systems}>
-            <h1 className={styles.title}>Systems</h1>
             <div className={styles.list}>
                 {isLoading && <p>Loading...</p>}
                 {error && <p>Error loading systems.</p>}

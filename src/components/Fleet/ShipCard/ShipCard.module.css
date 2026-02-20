@@ -111,6 +111,41 @@
     outline-offset: 2px;
 }
 
+.transit {
+    margin-top: 12px;
+    padding: 10px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: rgba(15, 23, 42, 0.35);
+    display: grid;
+    gap: 8px;
+}
+
+.transitHeader {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: center;
+}
+
+.transitLabel {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+}
+
+.transitEta {
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.transitArrival {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+}
+
 @media (max-width: 900px) {
     .card {
         padding: 12px;

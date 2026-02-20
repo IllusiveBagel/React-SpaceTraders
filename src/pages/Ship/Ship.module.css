@@ -73,6 +73,166 @@
     border: 1px solid var(--border);
 }
 
+.transitPanel {
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    background: var(--surface-soft);
+    display: grid;
+    gap: 12px;
+}
+
+.transitHeader {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.transitTitle {
+    margin: 0;
+    font-size: 1.05rem;
+    color: var(--text-primary);
+}
+
+.transitSubtitle {
+    margin: 6px 0 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.transitEta {
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(96, 165, 250, 0.45);
+    background: rgba(96, 165, 250, 0.15);
+    color: #bfdbfe;
+    font-size: 0.85rem;
+}
+
+.controls {
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    background: var(--surface-soft);
+    display: grid;
+    gap: 16px;
+}
+
+.controlsHeader {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.controlsTitle {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+
+.controlsSubtitle {
+    margin: 6px 0 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.controlsStatus {
+    display: grid;
+    gap: 6px;
+    text-align: right;
+    font-size: 0.85rem;
+}
+
+.controlsError {
+    color: #fca5a5;
+}
+
+.controlsMessage {
+    color: #bae6fd;
+}
+
+.controlsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px;
+}
+
+.controlCard {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px;
+    background: rgba(15, 23, 42, 0.35);
+    display: grid;
+    gap: 10px;
+}
+
+.controlTitle {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.controlRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.controlRow input {
+    flex: 1;
+    min-width: 120px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: rgba(15, 23, 42, 0.4);
+    color: var(--text-primary);
+    padding: 8px 10px;
+}
+
+.controlRow input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.controlRow button {
+    border-radius: 999px;
+    border: 1px solid rgba(96, 165, 250, 0.6);
+    background: rgba(96, 165, 250, 0.15);
+    color: #bfdbfe;
+    padding: 8px 14px;
+    cursor: pointer;
+}
+
+.controlRow button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.controlToggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.controlToggle input {
+    width: 14px;
+    height: 14px;
+}
+
+.controlHint {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
 .tabs {
     display: flex;
     flex-wrap: wrap;

@@ -14,11 +14,55 @@
     backdrop-filter: blur(8px);
 }
 
+.content {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
 .title {
     margin: 0;
     font-size: 1.25rem;
     font-weight: 700;
     color: var(--text-primary);
+}
+
+.agentPanel {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: rgba(15, 23, 42, 0.6);
+}
+
+.agentMeta {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.agentItem {
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+}
+
+.agentKey {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.agentValue {
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    font-weight: 600;
+    white-space: nowrap;
 }
 
 @media (max-width: 900px) {
@@ -29,5 +73,14 @@
 
     .title {
         font-size: 1.1rem;
+    }
+
+    .agentMeta {
+        gap: 8px;
+    }
+
+    .agentItem:nth-child(2),
+    .agentItem:nth-child(3) {
+        display: none;
     }
 }

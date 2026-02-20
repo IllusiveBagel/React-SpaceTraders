@@ -3,7 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import type { Ship } from "types/fleet";
 
 import styles from "./ShipCard.module.css";
-import { formatPercent } from "helpers/fleetFormatters";
+import { formatDuration, formatPercent } from "helpers/fleetFormatters";
+import ProgressBar from "components/Home/ProgressBar";
+import useTransitProgress from "hooks/fleet/useTransitProgress";
 
 type ShipCardProps = {
     ship: Ship;
@@ -17,6 +19,7 @@ const getStatusClass = (ship: Ship) => {
 
 const ShipCard = ({ ship }: ShipCardProps) => {
     const navigate = useNavigate();
+    const transit = useTransitProgress(ship);
 
     const handleCardClick = () => {
         navigate(`/fleet/${ship.symbol}`);
@@ -78,6 +81,14 @@ const ShipCard = ({ ship }: ShipCardProps) => {
                     </span>
                 </div>
                 <div className={styles.metric}>
+                    <span className={styles.label}>Cooldown</span>
+                    <span className={styles.value}>
+                        {ship.cooldown.remainingSeconds > 0
+                            ? `${ship.cooldown.remainingSeconds}s`
+                            : "Ready"}
+                    </span>
+                </div>
+                <div className={styles.metric}>
                     <span className={styles.label}>Crew</span>
                     <span className={styles.value}>
                         {ship.crew.current}/{ship.crew.required}/
@@ -85,6 +96,26 @@ const ShipCard = ({ ship }: ShipCardProps) => {
                     </span>
                 </div>
             </div>
+
+            {transit.isInTransit && (
+                <div className={styles.transit}>
+                    <div className={styles.transitHeader}>
+                        <span className={styles.transitLabel}>In transit</span>
+                        <span className={styles.transitEta}>
+                            ETA {formatDuration(transit.remainingSeconds)}
+                        </span>
+                    </div>
+                    <ProgressBar
+                        current={transit.elapsedSeconds}
+                        total={transit.totalSeconds}
+                    />
+                    {transit.arrivalTime && (
+                        <span className={styles.transitArrival}>
+                            Arrival {transit.arrivalTime}
+                        </span>
+                    )}
+                </div>
+            )}
         </article>
     );
 };
