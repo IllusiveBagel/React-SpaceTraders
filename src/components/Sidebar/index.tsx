@@ -5,7 +5,12 @@ import { clearAgentToken } from "services/tokenStore";
 
 import styles from "./Sidebar.module.css";
 
-const Sidebar = () => {
+type SidebarProps = {
+    isMobileOpen: boolean;
+    onMobileClose: () => void;
+};
+
+const Sidebar = ({ isMobileOpen, onMobileClose }: SidebarProps) => {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
 
@@ -13,61 +18,111 @@ const Sidebar = () => {
         clearAgentToken();
         queryClient.clear();
         navigate("/select-agent");
+        onMobileClose();
+    };
+
+    const handleNavClick = () => {
+        onMobileClose();
     };
 
     return (
-        <div className={styles.sidebar}>
-            <h2 className={styles.brand}>Space Traders</h2>
-            <ul className={styles.nav}>
-                <li>
-                    <Link className={styles.link} to="/">
-                        Home
-                    </Link>
-                </li>
-                <li>
-                    <Link className={styles.link} to="/fleet">
-                        Fleet
-                    </Link>
-                </li>
-                <li>
-                    <Link className={styles.link} to="/contracts">
-                        Contracts
-                    </Link>
-                </li>
-                <li>
-                    <Link className={styles.link} to="/market">
-                        Market
-                    </Link>
-                </li>
-                <li>
-                    <Link className={styles.link} to="/shipyard">
-                        Shipyard
-                    </Link>
-                </li>
-                <li>
-                    <Link className={styles.link} to="/map">
-                        Map
-                    </Link>
-                </li>
-                <li>
-                    <Link className={styles.link} to="/automation">
-                        Automation
-                    </Link>
-                </li>
-                <li>
-                    <Link className={styles.link} to="/systems">
-                        Systems
-                    </Link>
-                </li>
-            </ul>
-            <button
-                type="button"
-                className={styles.switchButton}
-                onClick={handleSwitchAgent}
+        <>
+            <div
+                className={`${styles.backdrop} ${
+                    isMobileOpen ? styles.backdropOpen : ""
+                }`}
+                onClick={onMobileClose}
+                aria-hidden
+            />
+            <div
+                className={`${styles.sidebar} ${
+                    isMobileOpen ? styles.sidebarOpen : ""
+                }`}
             >
-                Switch agent
-            </button>
-        </div>
+                <h2 className={styles.brand}>Space Traders</h2>
+                <ul className={styles.nav}>
+                    <li>
+                        <Link
+                            className={styles.link}
+                            to="/"
+                            onClick={handleNavClick}
+                        >
+                            Home
+                        </Link>
+                    </li>
+                    <li>
+                        <Link
+                            className={styles.link}
+                            to="/fleet"
+                            onClick={handleNavClick}
+                        >
+                            Fleet
+                        </Link>
+                    </li>
+                    <li>
+                        <Link
+                            className={styles.link}
+                            to="/contracts"
+                            onClick={handleNavClick}
+                        >
+                            Contracts
+                        </Link>
+                    </li>
+                    <li>
+                        <Link
+                            className={styles.link}
+                            to="/market"
+                            onClick={handleNavClick}
+                        >
+                            Market
+                        </Link>
+                    </li>
+                    <li>
+                        <Link
+                            className={styles.link}
+                            to="/shipyard"
+                            onClick={handleNavClick}
+                        >
+                            Shipyard
+                        </Link>
+                    </li>
+                    <li>
+                        <Link
+                            className={styles.link}
+                            to="/map"
+                            onClick={handleNavClick}
+                        >
+                            Map
+                        </Link>
+                    </li>
+                    <li>
+                        <Link
+                            className={styles.link}
+                            to="/automation"
+                            onClick={handleNavClick}
+                        >
+                            Automation
+                        </Link>
+                    </li>
+                    <li>
+                        <Link
+                            className={styles.link}
+                            to="/systems"
+                            onClick={handleNavClick}
+                        >
+                            Systems
+                        </Link>
+                    </li>
+                </ul>
+                <button
+                    type="button"
+                    className={styles.switchButton}
+                    onClick={handleSwitchAgent}
+                >
+                    Switch agent
+                </button>
+            </div>
+        </>
     );
 };
 

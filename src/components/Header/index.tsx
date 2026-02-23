@@ -3,7 +3,12 @@ import { usePageTitleContext } from "components/Layout/PageTitleContext";
 
 import styles from "./Header.module.css";
 
-const Header = () => {
+type HeaderProps = {
+    isMobileNavOpen: boolean;
+    onMobileNavToggle: () => void;
+};
+
+const Header = ({ isMobileNavOpen, onMobileNavToggle }: HeaderProps) => {
     const { data: agent, isLoading, error } = useGetAgent();
     const { title } = usePageTitleContext();
     const credits = agent
@@ -13,7 +18,23 @@ const Header = () => {
     return (
         <header className={styles.header}>
             <div className={styles.content}>
-                <h1 className={styles.title}>{title}</h1>
+                <div className={styles.titleRow}>
+                    <button
+                        type="button"
+                        className={styles.menuButton}
+                        data-open={isMobileNavOpen}
+                        aria-label={
+                            isMobileNavOpen
+                                ? "Close navigation menu"
+                                : "Open navigation menu"
+                        }
+                        aria-expanded={isMobileNavOpen}
+                        onClick={onMobileNavToggle}
+                    >
+                        <span className={styles.menuIcon} aria-hidden />
+                    </button>
+                    <h1 className={styles.title}>{title}</h1>
+                </div>
                 <div className={styles.agentPanel}>
                     {isLoading && (
                         <span className={styles.agentValue}>Loading...</span>

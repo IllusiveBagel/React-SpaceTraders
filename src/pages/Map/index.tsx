@@ -305,12 +305,53 @@ const Map = () => {
         dragState.current.originY = translate.y;
     };
 
+    const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+        if (event.touches.length !== 1) {
+            return;
+        }
+
+        const target = event.target as HTMLElement;
+        if (target.closest("a")) {
+            return;
+        }
+
+        const touch = event.touches[0];
+        dragState.current.active = true;
+        dragState.current.startX = touch.clientX;
+        dragState.current.startY = touch.clientY;
+        dragState.current.originX = translate.x;
+        dragState.current.originY = translate.y;
+    };
+
+    const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
+        if (!dragState.current.active || event.touches.length !== 1) {
+            return;
+        }
+
+        const touch = event.touches[0];
+        const deltaX = touch.clientX - dragState.current.startX;
+        const deltaY = touch.clientY - dragState.current.startY;
+        setTranslate({
+            x: dragState.current.originX + deltaX,
+            y: dragState.current.originY + deltaY,
+        });
+        event.preventDefault();
+    };
+
+    const handleTouchEnd = () => {
+        dragState.current.active = false;
+    };
+
     return (
         <section className={styles.map}>
             <div
                 className={styles.mapViewport}
                 onWheel={handleWheel}
                 onMouseDown={handleMouseDown}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                onTouchCancel={handleTouchEnd}
             >
                 <div
                     className={styles.mapContent}

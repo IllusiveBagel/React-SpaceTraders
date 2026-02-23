@@ -9,8 +9,12 @@
 }
 
 @media (max-width: 900px) {
+    .layout {
+        padding-top: var(--header-height);
+    }
+
     .main {
         margin-left: 0;
-        padding: calc(var(--header-height) + 20px) 16px 16px;
+        padding: 20px 16px 16px;
     }
 }

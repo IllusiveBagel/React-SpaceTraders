@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 import styles from "./Pagination.module.css";
 
 type PaginationProps = {
@@ -8,9 +10,21 @@ type PaginationProps = {
     isDisabled?: boolean;
 };
 
-const getPageRange = (current: number, totalPages: number) => {
+const getPageRange = (
+    current: number,
+    totalPages: number,
+    isCompact: boolean,
+) => {
     const pages: (number | "ellipsis")[] = [];
     const maxVisible = 5;
+
+    if (isCompact) {
+        if (totalPages <= 3) {
+            return Array.from({ length: totalPages }, (_, index) => index + 1);
+        }
+
+        return [current];
+    }
 
     if (totalPages <= maxVisible) {
         return Array.from({ length: totalPages }, (_, index) => index + 1);
@@ -45,13 +59,39 @@ const Pagination = ({
     onPageChange,
     isDisabled = false,
 }: PaginationProps) => {
+    const [isCompact, setIsCompact] = useState(false);
     const totalPages = Math.max(1, Math.ceil(total / limit));
+
+    useEffect(() => {
+        if (typeof window === "undefined") {
+            return;
+        }
+
+        const media = window.matchMedia("(max-width: 640px)");
+        const update = () => setIsCompact(media.matches);
+
+        update();
+
+        if (media.addEventListener) {
+            media.addEventListener("change", update);
+        } else {
+            media.addListener(update);
+        }
+
+        return () => {
+            if (media.removeEventListener) {
+                media.removeEventListener("change", update);
+            } else {
+                media.removeListener(update);
+            }
+        };
+    }, []);
 
     if (totalPages <= 1) {
         return null;
     }
 
-    const range = getPageRange(page, totalPages);
+    const range = getPageRange(page, totalPages, isCompact);
 
     return (
         <nav className={styles.pagination} aria-label="Pagination">

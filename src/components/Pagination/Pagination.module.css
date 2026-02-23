@@ -79,10 +79,32 @@
 @media (max-width: 640px) {
     .pagination {
         gap: 8px;
+        justify-content: center;
+        background: transparent;
+        border: none;
+        padding: 0;
+    }
+
+    .pages {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .control,
+    .page,
+    .pageActive {
+        padding: 6px 10px;
+        font-size: 0.8rem;
+        box-shadow: none;
+    }
+
+    .control:hover,
+    .page:hover {
+        transform: none;
+        background: #1e293b;
     }
 
     .summary {
-        width: 100%;
-        margin-left: 0;
+        display: none;
     }
 }

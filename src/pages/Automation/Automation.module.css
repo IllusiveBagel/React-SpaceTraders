@@ -312,3 +312,43 @@
         align-items: flex-start;
     }
 }
+
+@media (max-width: 600px) {
+    .automationCardHeader {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .automationFooter {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .automationButtons {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .automationStart,
+    .automationPause,
+    .automationStop {
+        width: 100%;
+        text-align: center;
+    }
+
+    .automationLogItem {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .automationLogTime {
+        white-space: normal;
+    }
+
+    .automationField input,
+    .automationField select {
+        padding: 10px 12px;
+        font-size: 0.9rem;
+    }
+}

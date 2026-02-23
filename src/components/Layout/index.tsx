@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Outlet } from "react-router-dom";
 
 import Sidebar from "components/Sidebar";
@@ -7,11 +8,21 @@ import { PageTitleProvider } from "components/Layout/PageTitleContext";
 import styles from "./Layout.module.css";
 
 const Layout = () => {
+    const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+
     return (
         <div className={styles.layout}>
-            <Sidebar />
+            <Sidebar
+                isMobileOpen={isMobileNavOpen}
+                onMobileClose={() => setIsMobileNavOpen(false)}
+            />
             <PageTitleProvider>
-                <Header />
+                <Header
+                    isMobileNavOpen={isMobileNavOpen}
+                    onMobileNavToggle={() =>
+                        setIsMobileNavOpen((open) => !open)
+                    }
+                />
                 <main className={styles.main}>
                     <Outlet />
                 </main>

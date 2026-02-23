@@ -39,6 +39,24 @@
     z-index: 2;
 }
 
+@media (max-width: 640px) {
+    .systems {
+        padding: 16px;
+    }
+
+    .list {
+        padding-bottom: 72px;
+    }
+
+    .pagination {
+        position: absolute;
+        left: 50%;
+        bottom: 12px;
+        transform: translateX(-50%);
+        margin-top: 0;
+    }
+}
+
 .item {
     display: grid;
     gap: 12px;
