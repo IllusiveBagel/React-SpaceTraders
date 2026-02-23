@@ -277,8 +277,8 @@ const AutomationCard = ({
                     <select
                         value={templateId}
                         onChange={(event) => {
-                            const nextTemplateId =
-                                event.target.value as AutomationTemplateId;
+                            const nextTemplateId = event.target
+                                .value as AutomationTemplateId;
                             const nextTemplate =
                                 getTemplateById(nextTemplateId);
                             onUpdate({
