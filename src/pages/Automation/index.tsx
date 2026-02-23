@@ -17,6 +17,7 @@ import type {
     AutomationMode,
     MiningAutomationConfig,
     AutomationRunState,
+    AutomationTemplateId,
 } from "automation/types";
 
 import styles from "./Automation.module.css";
@@ -275,17 +276,18 @@ const AutomationCard = ({
                     <span>Strategy template</span>
                     <select
                         value={templateId}
-                        onChange={(event) =>
+                        onChange={(event) => {
+                            const nextTemplateId =
+                                event.target.value as AutomationTemplateId;
+                            const nextTemplate =
+                                getTemplateById(nextTemplateId);
                             onUpdate({
-                                ...getTemplateDefaults(
-                                    event.target.value,
-                                    ship,
-                                ),
-                                mode: (getTemplateById(event.target.value)
-                                    ?.mode ?? modeValue) as AutomationMode,
-                                templateId: event.target.value,
-                            })
-                        }
+                                ...getTemplateDefaults(nextTemplateId, ship),
+                                mode: (nextTemplate?.mode ??
+                                    modeValue) as AutomationMode,
+                                templateId: nextTemplateId,
+                            });
+                        }}
                     >
                         {automationTemplates.map((option) => (
                             <option key={option.id} value={option.id}>

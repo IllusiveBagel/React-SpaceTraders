@@ -1,9 +1,10 @@
+import type { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 
 import { hasAgentToken } from "services/tokenStore";
 
 type RequireAgentProps = {
-    children: JSX.Element;
+    children: ReactNode;
 };
 
 const RequireAgent = ({ children }: RequireAgentProps) => {
