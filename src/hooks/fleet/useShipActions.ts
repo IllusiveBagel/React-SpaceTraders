@@ -3,9 +3,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
     dockShip,
     extractResources,
+    jettisonCargo,
     navigateShip,
     orbitShip,
     refuelShip,
+    setFlightMode,
     sellCargo,
 } from "services/shipActions";
 
@@ -93,13 +95,43 @@ const useShipActions = (shipSymbol?: string) => {
         onSuccess: invalidateShip,
     });
 
+    const flightModeMutation = useMutation({
+        mutationFn: async (flightMode: string) => {
+            if (!shipSymbol) {
+                throw new Error("Ship symbol required");
+            }
+
+            return setFlightMode(shipSymbol, flightMode);
+        },
+        onSuccess: invalidateShip,
+    });
+
+    const jettisonMutation = useMutation({
+        mutationFn: async ({
+            symbol,
+            units,
+        }: {
+            symbol: string;
+            units: number;
+        }) => {
+            if (!shipSymbol) {
+                throw new Error("Ship symbol required");
+            }
+
+            return jettisonCargo(shipSymbol, symbol, units);
+        },
+        onSuccess: invalidateShip,
+    });
+
     const isWorking =
         orbitMutation.isPending ||
         dockMutation.isPending ||
         navigateMutation.isPending ||
         extractMutation.isPending ||
         refuelMutation.isPending ||
-        sellMutation.isPending;
+        sellMutation.isPending ||
+        flightModeMutation.isPending ||
+        jettisonMutation.isPending;
 
     return {
         orbit: orbitMutation.mutateAsync,
@@ -107,7 +139,9 @@ const useShipActions = (shipSymbol?: string) => {
         navigate: navigateMutation.mutateAsync,
         extract: extractMutation.mutateAsync,
         refuel: refuelMutation.mutateAsync,
+        setFlightMode: flightModeMutation.mutateAsync,
         sell: sellMutation.mutateAsync,
+        jettison: jettisonMutation.mutateAsync,
         isWorking,
         error:
             orbitMutation.error ||
@@ -115,7 +149,9 @@ const useShipActions = (shipSymbol?: string) => {
             navigateMutation.error ||
             extractMutation.error ||
             refuelMutation.error ||
-            sellMutation.error,
+            sellMutation.error ||
+            flightModeMutation.error ||
+            jettisonMutation.error,
     };
 };
 

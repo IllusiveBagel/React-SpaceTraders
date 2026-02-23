@@ -14,7 +14,9 @@ type ContractCardProps = {
 
 const ContractCard = ({ contract }: ContractCardProps) => {
     const { data: ships, isLoading: shipsLoading } = useGetShips();
-    const { deliver, fulfill, isWorking } = useContractActions(contract.id);
+    const { accept, deliver, fulfill, isWorking } = useContractActions(
+        contract.id,
+    );
     const [selectedShipSymbol, setSelectedShipSymbol] = useState("");
     const [deliveryUnits, setDeliveryUnits] = useState<Record<string, string>>(
         {},
@@ -148,6 +150,15 @@ const ContractCard = ({ contract }: ContractCardProps) => {
         }
 
         await handleAction(() => fulfill(), "Contract fulfilled.");
+    };
+
+    const handleAccept = async () => {
+        if (contract.accepted) {
+            setActionError("Contract already accepted.");
+            return;
+        }
+
+        await handleAction(() => accept(), "Contract accepted.");
     };
 
     return (
@@ -286,6 +297,17 @@ const ContractCard = ({ contract }: ContractCardProps) => {
                         <p className={styles.actionHint}>
                             Contract must be accepted before deliveries.
                         </p>
+                    )}
+
+                    {!contract.accepted && (
+                        <button
+                            type="button"
+                            className={styles.actionPrimary}
+                            onClick={handleAccept}
+                            disabled={actionDisabled}
+                        >
+                            Accept contract
+                        </button>
                     )}
 
                     <div className={styles.deliveryActions}>

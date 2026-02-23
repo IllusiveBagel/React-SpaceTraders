@@ -9,6 +9,11 @@ type SellPayload = {
     units: number;
 };
 
+type JettisonPayload = {
+    symbol: string;
+    units: number;
+};
+
 const orbitShip = (shipSymbol: string) => {
     return axiosManager.post(`/my/ships/${shipSymbol}/orbit`);
 };
@@ -40,11 +45,27 @@ const sellCargo = (shipSymbol: string, symbol: string, units: number) => {
     return axiosManager.post(`/my/ships/${shipSymbol}/sell`, payload);
 };
 
+const jettisonCargo = (shipSymbol: string, symbol: string, units: number) => {
+    const payload: JettisonPayload = { symbol, units };
+    return axiosManager.post(`/my/ships/${shipSymbol}/jettison`, payload);
+};
+
+type FlightModePayload = {
+    flightMode: string;
+};
+
+const setFlightMode = (shipSymbol: string, flightMode: string) => {
+    const payload: FlightModePayload = { flightMode };
+    return axiosManager.patch(`/my/ships/${shipSymbol}/nav`, payload);
+};
+
 export {
     dockShip,
     extractResources,
     navigateShip,
     orbitShip,
     refuelShip,
+    setFlightMode,
     sellCargo,
+    jettisonCargo,
 };

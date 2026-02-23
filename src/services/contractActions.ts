@@ -21,4 +21,8 @@ const negotiateContract = (shipSymbol: string) => {
     return axiosManager.post(`/my/ships/${shipSymbol}/negotiate/contract`);
 };
 
-export { deliverContract, fulfillContract, negotiateContract };
+const acceptContract = (contractId: string) => {
+    return axiosManager.post(`/my/contracts/${contractId}/accept`);
+};
+
+export { acceptContract, deliverContract, fulfillContract, negotiateContract };

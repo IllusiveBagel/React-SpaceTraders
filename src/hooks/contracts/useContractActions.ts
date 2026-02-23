@@ -1,6 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { deliverContract, fulfillContract } from "services/contractActions";
+import {
+    acceptContract,
+    deliverContract,
+    fulfillContract,
+} from "services/contractActions";
 
 type DeliverArgs = {
     shipSymbol: string;
@@ -49,11 +53,29 @@ const useContractActions = (contractId?: string) => {
         onSuccess: invalidateContracts,
     });
 
+    const acceptMutation = useMutation({
+        mutationFn: async () => {
+            if (!contractId) {
+                throw new Error("Contract id required");
+            }
+
+            return acceptContract(contractId);
+        },
+        onSuccess: invalidateContracts,
+    });
+
     return {
+        accept: acceptMutation.mutateAsync,
         deliver: deliverMutation.mutateAsync,
         fulfill: fulfillMutation.mutateAsync,
-        isWorking: deliverMutation.isPending || fulfillMutation.isPending,
-        error: deliverMutation.error || fulfillMutation.error,
+        isWorking:
+            acceptMutation.isPending ||
+            deliverMutation.isPending ||
+            fulfillMutation.isPending,
+        error:
+            acceptMutation.error ||
+            deliverMutation.error ||
+            fulfillMutation.error,
     };
 };
 

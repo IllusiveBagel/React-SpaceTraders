@@ -6,6 +6,8 @@ import DetailField from "components/Fleet/DetailField";
 import useGetShip from "hooks/fleet/useGetShip";
 import useShipActions from "hooks/fleet/useShipActions";
 import useTransitProgress from "hooks/fleet/useTransitProgress";
+import useGetMiningWaypoints from "hooks/systems/useGetMiningWaypoints";
+import useGetSystem from "hooks/systems/useGetSystem";
 import ProgressBar from "components/Home/ProgressBar";
 import { usePageTitle } from "components/Layout/PageTitleContext";
 import {
@@ -25,14 +27,28 @@ const getStatusClass = (status: string) => {
 const Ship = () => {
     const { shipSymbol } = useParams();
     const { data: ship, isLoading, error } = useGetShip(shipSymbol);
-    const { orbit, dock, navigate, extract, refuel, sell, isWorking } =
-        useShipActions(shipSymbol);
+    const {
+        orbit,
+        dock,
+        navigate,
+        extract,
+        refuel,
+        sell,
+        jettison,
+        setFlightMode,
+        isWorking,
+    } = useShipActions(shipSymbol);
     const transit = useTransitProgress(ship);
+    const { data: system } = useGetSystem(ship?.nav.systemSymbol);
+    const { data: miningWaypoints = [] } = useGetMiningWaypoints(
+        ship?.nav.systemSymbol,
+    );
     const [activeTab, setActiveTab] = useState<ShipTab>("info");
     const [navigateTarget, setNavigateTarget] = useState("");
     const [sellSymbol, setSellSymbol] = useState("");
     const [sellUnits, setSellUnits] = useState("");
     const [refuelFromCargo, setRefuelFromCargo] = useState(false);
+    const [flightMode, setFlightModeValue] = useState("");
     const [actionMessage, setActionMessage] = useState<string | null>(null);
     const [actionError, setActionError] = useState<string | null>(null);
     const cargoPercent = ship
@@ -67,12 +83,97 @@ const Ship = () => {
         );
     }, [ship]);
     const hasFuelCargo = fuelCargoUnits > 0;
+    const hasCargo = ship ? ship.cargo.units > 0 : false;
+    const isInOrbit = ship?.nav.status === "IN_ORBIT";
+    const isDocked = ship?.nav.status === "DOCKED";
+    const canRefuel = Boolean(isDocked || hasFuelCargo);
+    const hasMiningMount = Boolean(
+        ship?.mounts.some(
+            (mount) =>
+                mount.symbol.toUpperCase().includes("MINING") ||
+                mount.name.toUpperCase().includes("MINING"),
+        ),
+    );
+    const isAtMiningWaypoint = Boolean(
+        isInOrbit &&
+        ship?.nav.waypointSymbol &&
+        miningWaypoints.some(
+            (waypoint) => waypoint.symbol === ship.nav.waypointSymbol,
+        ),
+    );
+    const isOnCooldown = Boolean(ship && ship.cooldown.remainingSeconds > 0);
+    const flightModeOptions = useMemo(() => {
+        const baseModes = ["CRUISE", "DRIFT", "STEALTH", "BURN"];
+        const currentMode = ship?.nav.flightMode;
+        if (currentMode && !baseModes.includes(currentMode)) {
+            return [currentMode, ...baseModes];
+        }
+
+        return baseModes;
+    }, [ship?.nav.flightMode]);
+    const flightModeValue = flightMode || ship?.nav.flightMode || "";
+    const systemWaypoints = useMemo(() => {
+        if (!system?.waypoints) {
+            return [] as {
+                symbol: string;
+                type: string;
+                x: number;
+                y: number;
+            }[];
+        }
+
+        return [...system.waypoints].sort((a, b) =>
+            a.symbol.localeCompare(b.symbol),
+        );
+    }, [system?.waypoints]);
+    const navigateOptions = useMemo(() => {
+        const currentSymbol = ship?.nav.waypointSymbol;
+        if (!currentSymbol) {
+            return systemWaypoints;
+        }
+
+        const hasCurrent = systemWaypoints.some(
+            (waypoint) => waypoint.symbol === currentSymbol,
+        );
+        if (hasCurrent) {
+            return systemWaypoints;
+        }
+
+        return [
+            {
+                symbol: currentSymbol,
+                type: "CURRENT",
+                x: 0,
+                y: 0,
+            },
+            ...systemWaypoints,
+        ];
+    }, [ship?.nav.waypointSymbol, systemWaypoints]);
+    const selectedWaypoint = useMemo(() => {
+        return (
+            systemWaypoints.find(
+                (waypoint) => waypoint.symbol === navigateTarget,
+            ) ?? null
+        );
+    }, [navigateTarget, systemWaypoints]);
 
     useEffect(() => {
         if (!hasFuelCargo && refuelFromCargo) {
             setRefuelFromCargo(false);
         }
     }, [hasFuelCargo, refuelFromCargo]);
+
+    useEffect(() => {
+        if (ship?.nav.flightMode) {
+            setFlightModeValue(ship.nav.flightMode);
+        }
+    }, [ship?.nav.flightMode]);
+
+    useEffect(() => {
+        if (ship?.nav.waypointSymbol && !navigateTarget) {
+            setNavigateTarget(ship.nav.waypointSymbol);
+        }
+    }, [ship?.nav.waypointSymbol, navigateTarget]);
 
     usePageTitle(ship?.registration.name ?? "Ship");
 
@@ -95,7 +196,7 @@ const Ship = () => {
 
     const handleNavigate = async () => {
         if (!navigateTarget.trim()) {
-            setActionError("Enter a waypoint symbol to navigate.");
+            setActionError("Select a waypoint to navigate.");
             return;
         }
 
@@ -131,6 +232,58 @@ const Ship = () => {
         await handleAction(
             () => sell({ symbol: trimmedSymbol, units: requestedUnits }),
             `Selling ${requestedUnits} ${trimmedSymbol}.`,
+        );
+    };
+
+    const handleJettison = async () => {
+        if (!ship) {
+            return;
+        }
+
+        const trimmedSymbol = sellSymbolValue.trim();
+        if (!trimmedSymbol) {
+            setActionError("Select cargo to jettison.");
+            return;
+        }
+
+        const matchingUnits =
+            ship.cargo.inventory.find((item) => item.symbol === trimmedSymbol)
+                ?.units ?? 0;
+        const requestedUnits = sellUnits.trim()
+            ? Number(sellUnits)
+            : matchingUnits;
+
+        if (!requestedUnits || Number.isNaN(requestedUnits)) {
+            setActionError("Enter a valid unit count to jettison.");
+            return;
+        }
+
+        await handleAction(
+            () => jettison({ symbol: trimmedSymbol, units: requestedUnits }),
+            `Jettisoned ${requestedUnits} ${trimmedSymbol}.`,
+        );
+    };
+
+    const handleFlightMode = async () => {
+        if (!ship) {
+            return;
+        }
+
+        const trimmedMode = flightModeValue.trim().toUpperCase();
+        if (!trimmedMode) {
+            setActionError("Select a flight mode.");
+            return;
+        }
+
+        if (trimmedMode === ship.nav.flightMode) {
+            setActionError(null);
+            setActionMessage(`Flight mode already ${trimmedMode}.`);
+            return;
+        }
+
+        await handleAction(
+            () => setFlightMode(trimmedMode),
+            `Flight mode set to ${trimmedMode}.`,
         );
     };
 
@@ -369,23 +522,63 @@ const Ship = () => {
                                                 Navigation
                                             </p>
                                             <div className={styles.controlRow}>
-                                                <input
+                                                <select
                                                     value={navigateTarget}
                                                     onChange={(event) =>
                                                         setNavigateTarget(
                                                             event.target.value,
                                                         )
                                                     }
-                                                    placeholder="Waypoint symbol"
-                                                />
+                                                    disabled={
+                                                        isWorking ||
+                                                        navigateOptions.length ===
+                                                            0 ||
+                                                        !isInOrbit
+                                                    }
+                                                >
+                                                    {navigateOptions.length ===
+                                                    0 ? (
+                                                        <option value="">
+                                                            No waypoints found
+                                                        </option>
+                                                    ) : (
+                                                        navigateOptions.map(
+                                                            (waypoint) => (
+                                                                <option
+                                                                    key={
+                                                                        waypoint.symbol
+                                                                    }
+                                                                    value={
+                                                                        waypoint.symbol
+                                                                    }
+                                                                >
+                                                                    {
+                                                                        waypoint.symbol
+                                                                    }
+                                                                </option>
+                                                            ),
+                                                        )
+                                                    )}
+                                                </select>
                                                 <button
                                                     type="button"
                                                     onClick={handleNavigate}
-                                                    disabled={isWorking}
+                                                    disabled={
+                                                        isWorking ||
+                                                        !navigateTarget ||
+                                                        !isInOrbit
+                                                    }
                                                 >
                                                     Navigate
                                                 </button>
                                             </div>
+                                            <p className={styles.controlHint}>
+                                                {!isInOrbit
+                                                    ? "You must be in orbit to navigate."
+                                                    : selectedWaypoint
+                                                      ? `Type: ${selectedWaypoint.type} • Coords: ${selectedWaypoint.x}, ${selectedWaypoint.y}`
+                                                      : "Choose a destination in the current system."}
+                                            </p>
                                             <div className={styles.controlRow}>
                                                 <button
                                                     type="button"
@@ -424,7 +617,9 @@ const Ship = () => {
                                                                 : "Refueling ship.",
                                                         )
                                                     }
-                                                    disabled={isWorking}
+                                                    disabled={
+                                                        isWorking || !canRefuel
+                                                    }
                                                 >
                                                     Refuel
                                                 </button>
@@ -449,38 +644,106 @@ const Ship = () => {
                                                             !hasFuelCargo
                                                         }
                                                     />
-                                                    Use cargo fuel
+                                                    <span
+                                                        className={
+                                                            styles.controlToggleLabel
+                                                        }
+                                                    >
+                                                        Use cargo fuel
+                                                    </span>
                                                 </label>
                                             </div>
                                             <p className={styles.controlHint}>
-                                                {hasFuelCargo
-                                                    ? `Cargo fuel: ${fuelCargoUnits} units`
-                                                    : "No fuel in cargo"}
+                                                {canRefuel
+                                                    ? hasFuelCargo
+                                                        ? `Cargo fuel: ${fuelCargoUnits} units`
+                                                        : "Docked: station refuel available"
+                                                    : "Refuel requires docking or cargo fuel."}
                                             </p>
                                         </div>
 
+                                        {hasMiningMount && (
+                                            <div className={styles.controlCard}>
+                                                <p
+                                                    className={
+                                                        styles.controlTitle
+                                                    }
+                                                >
+                                                    Mining
+                                                </p>
+                                                <div
+                                                    className={
+                                                        styles.controlRow
+                                                    }
+                                                >
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            handleAction(
+                                                                () => extract(),
+                                                                "Extracting resources.",
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            isWorking ||
+                                                            !isAtMiningWaypoint ||
+                                                            isOnCooldown
+                                                        }
+                                                    >
+                                                        Extract
+                                                    </button>
+                                                </div>
+                                                <p
+                                                    className={
+                                                        styles.controlHint
+                                                    }
+                                                >
+                                                    {!isAtMiningWaypoint
+                                                        ? "Must be in orbit at a minable waypoint."
+                                                        : isOnCooldown
+                                                          ? `Cooldown: ${ship.cooldown.remainingSeconds}s`
+                                                          : "Ready to extract."}
+                                                </p>
+                                            </div>
+                                        )}
+
                                         <div className={styles.controlCard}>
                                             <p className={styles.controlTitle}>
-                                                Mining
+                                                Flight mode
                                             </p>
                                             <div className={styles.controlRow}>
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        handleAction(
-                                                            () => extract(),
-                                                            "Extracting resources.",
+                                                <select
+                                                    value={flightModeValue}
+                                                    onChange={(event) =>
+                                                        setFlightModeValue(
+                                                            event.target.value,
                                                         )
                                                     }
-                                                    disabled={isWorking}
                                                 >
-                                                    Extract
+                                                    {flightModeOptions.map(
+                                                        (mode) => (
+                                                            <option
+                                                                key={mode}
+                                                                value={mode}
+                                                            >
+                                                                {mode}
+                                                            </option>
+                                                        ),
+                                                    )}
+                                                </select>
+                                                <button
+                                                    type="button"
+                                                    onClick={handleFlightMode}
+                                                    disabled={
+                                                        isWorking ||
+                                                        !flightModeValue
+                                                    }
+                                                >
+                                                    Set mode
                                                 </button>
                                             </div>
                                             <p className={styles.controlHint}>
-                                                Cooldown:{" "}
-                                                {ship.cooldown.remainingSeconds}
-                                                s
+                                                Current: {ship.nav.flightMode}
                                             </p>
                                         </div>
 
@@ -489,16 +752,36 @@ const Ship = () => {
                                                 Sell cargo
                                             </p>
                                             <div className={styles.controlRow}>
-                                                <input
-                                                    list="cargo-symbols"
+                                                <select
                                                     value={sellSymbolValue}
                                                     onChange={(event) =>
                                                         setSellSymbol(
-                                                            event.target.value.toUpperCase(),
+                                                            event.target.value,
                                                         )
                                                     }
-                                                    placeholder="Cargo symbol"
-                                                />
+                                                    disabled={
+                                                        isWorking || !hasCargo
+                                                    }
+                                                >
+                                                    {!hasCargo ? (
+                                                        <option value="">
+                                                            No cargo available
+                                                        </option>
+                                                    ) : (
+                                                        cargoSymbols.map(
+                                                            (symbol) => (
+                                                                <option
+                                                                    key={symbol}
+                                                                    value={
+                                                                        symbol
+                                                                    }
+                                                                >
+                                                                    {symbol}
+                                                                </option>
+                                                            ),
+                                                        )
+                                                    )}
+                                                </select>
                                                 <input
                                                     type="number"
                                                     min={1}
@@ -515,9 +798,20 @@ const Ship = () => {
                                                 <button
                                                     type="button"
                                                     onClick={handleSell}
-                                                    disabled={isWorking}
+                                                    disabled={
+                                                        isWorking || !hasCargo
+                                                    }
                                                 >
                                                     Sell
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={handleJettison}
+                                                    disabled={
+                                                        isWorking || !hasCargo
+                                                    }
+                                                >
+                                                    Jettison
                                                 </button>
                                                 <span
                                                     className={
@@ -528,14 +822,6 @@ const Ship = () => {
                                                     {ship.cargo.capacity} units
                                                 </span>
                                             </div>
-                                            <datalist id="cargo-symbols">
-                                                {cargoSymbols.map((symbol) => (
-                                                    <option
-                                                        key={symbol}
-                                                        value={symbol}
-                                                    />
-                                                ))}
-                                            </datalist>
                                         </div>
                                     </div>
                                 </section>

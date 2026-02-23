@@ -125,6 +125,27 @@
     align-items: center;
 }
 
+.automationProgressPanel {
+    display: grid;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: rgba(15, 23, 42, 0.3);
+}
+
+.automationProgressBlock {
+    display: grid;
+    gap: 8px;
+}
+
+.automationProgressHeader {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
 .automationStatusText {
     color: var(--text-secondary);
     font-size: 0.8rem;
@@ -160,6 +181,57 @@
     border-color: rgba(248, 113, 113, 0.6);
     background: rgba(248, 113, 113, 0.12);
     color: #fca5a5;
+}
+
+.automationLog {
+    display: grid;
+    gap: 8px;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+}
+
+.automationLogTitle {
+    margin: 0;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+}
+
+.automationLogList {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 6px;
+}
+
+.automationLogItem {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 0.8rem;
+    color: var(--text-primary);
+}
+
+.automationLogAction {
+    color: var(--text-primary);
+}
+
+.automationLogError {
+    color: #fca5a5;
+}
+
+.automationLogTime {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.automationLogEmpty {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
 }
 
 .state,
