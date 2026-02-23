@@ -169,6 +169,12 @@ const runContractAutomationStep = async (
     const tradeUnits = getTradeUnits(ship, deliveryTradeSymbol);
     const atDelivery = ship.nav.waypointSymbol === deliveryTarget;
     const isDocked = ship.nav.status === "DOCKED";
+    const isCargoFull =
+        ship.cargo.capacity > 0
+            ? ship.cargo.units >= ship.cargo.capacity
+            : tradeUnits > 0;
+    const isCargoOnlyContract = ship.cargo.units === tradeUnits;
+    const readyToDeliver = isCargoFull && isCargoOnlyContract;
     const nonContractCargo = ship.cargo.inventory.find(
         (item) => item.symbol !== deliveryTradeSymbol && item.units > 0,
     );
@@ -189,7 +195,7 @@ const runContractAutomationStep = async (
         };
     }
 
-    if (tradeUnits > 0) {
+    if (readyToDeliver && tradeUnits > 0) {
         if (!atDelivery) {
             if (isDocked) {
                 await actions.orbit();

@@ -6,11 +6,17 @@ import useCooldownProgress from "hooks/fleet/useCooldownProgress";
 import useAutomation from "automation/useAutomation";
 import useGetMiningWaypoints from "hooks/systems/useGetMiningWaypoints";
 import useGetMarketWaypoints from "hooks/systems/useGetMarketWaypoints";
+import {
+    automationTemplates,
+    getTemplateById,
+    getTemplateIdForMode,
+} from "automation/templates";
 import type { Ship } from "types/fleet";
 import type {
     AutomationStatus,
     AutomationMode,
     MiningAutomationConfig,
+    AutomationRunState,
 } from "automation/types";
 
 import styles from "./Automation.module.css";
@@ -21,20 +27,70 @@ import { formatDuration } from "helpers/fleetFormatters";
 type AutomationCardProps = {
     ship: Ship;
     config: MiningAutomationConfig;
-    isRunning: boolean;
+    runState: AutomationRunState;
     status?: AutomationStatus;
     onUpdate: (update: Partial<MiningAutomationConfig>) => void;
     onStart: () => void;
+    onPause: () => void;
+    onResume: () => void;
     onStop: () => void;
+};
+
+const getTemplateDefaults = (templateId: string, ship: Ship) => {
+    switch (templateId) {
+        case "contract_fulfillment":
+            return {
+                mineWaypoint: ship.nav.waypointSymbol,
+                marketWaypoint: ship.nav.waypointSymbol,
+                intervalSeconds: 20,
+                minFuelPercent: 20,
+                minCargoFreeUnits: 0,
+                autoRefuel: true,
+            };
+        case "mining_loop":
+        default:
+            return {
+                mineWaypoint: ship.nav.waypointSymbol,
+                marketWaypoint: ship.nav.waypointSymbol,
+                tradeSymbol: "IRON_ORE",
+                sellAtUnits: ship.cargo.capacity,
+                intervalSeconds: 15,
+                minFuelPercent: 15,
+                minCargoFreeUnits: Math.max(
+                    5,
+                    Math.floor(ship.cargo.capacity * 0.1),
+                ),
+                autoRefuel: false,
+            };
+    }
+};
+
+const formatLogDuration = (durationMs?: number) => {
+    if (typeof durationMs !== "number") return "";
+    if (durationMs < 1000) return `${durationMs}ms`;
+    return `${(durationMs / 1000).toFixed(1)}s`;
+};
+
+const formatBackoff = (iso?: string) => {
+    if (!iso) return null;
+    const parsed = new Date(iso);
+    if (Number.isNaN(parsed.getTime())) return null;
+    const seconds = Math.max(
+        0,
+        Math.ceil((parsed.getTime() - Date.now()) / 1000),
+    );
+    return seconds > 0 ? `Backoff ${seconds}s` : null;
 };
 
 const AutomationCard = ({
     ship,
     config,
-    isRunning,
+    runState,
     status,
     onUpdate,
     onStart,
+    onPause,
+    onResume,
     onStop,
 }: AutomationCardProps) => {
     const { data: miningWaypoints } = useGetMiningWaypoints(
@@ -127,10 +183,68 @@ const AutomationCard = ({
     addMiningOption(ship.nav.waypointSymbol, "CURRENT");
     addMiningOption(config.mineWaypoint, "CUSTOM");
 
+    const marketOptions = marketWaypoints ?? [];
+    const marketSelectOptions: { symbol: string; type?: string }[] =
+        marketOptions.map((waypoint) => ({
+            symbol: waypoint.symbol,
+            type: waypoint.type,
+        }));
+    const marketOptionSymbols = new Set(
+        marketSelectOptions.map((waypoint) => waypoint.symbol),
+    );
+    const addMarketOption = (symbol: string, type: string) => {
+        if (!symbol || marketOptionSymbols.has(symbol)) {
+            return;
+        }
+
+        marketOptionSymbols.add(symbol);
+        marketSelectOptions.push({ symbol, type });
+    };
+
+    addMarketOption(ship.nav.waypointSymbol, "CURRENT");
+    addMarketOption(config.marketWaypoint, "CUSTOM");
+
     const modeValue: AutomationMode = config.mode ?? "mine_and_sell";
+    const templateId = config.templateId ?? getTemplateIdForMode(modeValue);
+    const template = getTemplateById(templateId) ?? automationTemplates[0];
     const isContractMode = modeValue === "contract_jobs";
+    const isRunning = runState === "running";
+    const isPaused = runState === "paused";
+    const validationMessages: string[] = [];
+    const hasMineWaypoint = Boolean(config.mineWaypoint);
+    if (!hasMineWaypoint) {
+        validationMessages.push("Select a mine waypoint.");
+    }
+    if (!isContractMode) {
+        if (!config.marketWaypoint) {
+            validationMessages.push("Select a market waypoint.");
+        }
+        if (!config.tradeSymbol?.trim()) {
+            validationMessages.push("Enter a trade symbol.");
+        }
+        if (!config.sellAtUnits || config.sellAtUnits < 1) {
+            validationMessages.push("Set a valid sell-at unit count.");
+        }
+    }
+    if (!config.intervalSeconds || config.intervalSeconds < 5) {
+        validationMessages.push("Interval must be at least 5 seconds.");
+    }
+    if (typeof config.minFuelPercent === "number") {
+        if (config.minFuelPercent < 1 || config.minFuelPercent > 100) {
+            validationMessages.push("Fuel threshold must be 1-100%.");
+        }
+    }
+    const canStart = validationMessages.length === 0;
     const recentActions = status?.recentActions ?? [];
     const hasActivity = recentActions.length > 0;
+    const backoffLabel = formatBackoff(status?.backoffUntil);
+    const fuelCapacity = ship.fuel.capacity || 0;
+    const lowFuelWithoutRefuel =
+        fuelCapacity > 0 &&
+        (config.minFuelPercent ?? 15) > 0 &&
+        (ship.fuel.current / fuelCapacity) * 100 <
+            (config.minFuelPercent ?? 15) &&
+        !config.autoRefuel;
 
     return (
         <article className={styles.automationCard}>
@@ -147,27 +261,43 @@ const AutomationCard = ({
                     className={
                         isRunning
                             ? styles.automationStatusOn
-                            : styles.automationStatusOff
+                            : isPaused
+                              ? styles.automationStatusPaused
+                              : styles.automationStatusOff
                     }
                 >
-                    {isRunning ? "Running" : "Idle"}
+                    {isRunning ? "Running" : isPaused ? "Paused" : "Idle"}
                 </span>
             </div>
 
             <div className={styles.automationFields}>
                 <label className={styles.automationField}>
-                    <span>Automation</span>
+                    <span>Strategy template</span>
                     <select
-                        value={modeValue}
+                        value={templateId}
                         onChange={(event) =>
                             onUpdate({
-                                mode: event.target.value as AutomationMode,
+                                ...getTemplateDefaults(
+                                    event.target.value,
+                                    ship,
+                                ),
+                                mode: (getTemplateById(event.target.value)
+                                    ?.mode ?? modeValue) as AutomationMode,
+                                templateId: event.target.value,
                             })
                         }
                     >
-                        <option value="mine_and_sell">Mine and sell</option>
-                        <option value="contract_jobs">Contract jobs</option>
+                        {automationTemplates.map((option) => (
+                            <option key={option.id} value={option.id}>
+                                {option.label}
+                            </option>
+                        ))}
                     </select>
+                    {template && (
+                        <span className={styles.automationHint}>
+                            {template.description}
+                        </span>
+                    )}
                 </label>
                 <label className={styles.automationField}>
                     <span>Mine waypoint</span>
@@ -196,6 +326,35 @@ const AutomationCard = ({
                 </label>
                 {!isContractMode && (
                     <>
+                        <label className={styles.automationField}>
+                            <span>Market waypoint</span>
+                            <select
+                                value={config.marketWaypoint}
+                                onChange={(event) =>
+                                    onUpdate({
+                                        marketWaypoint: event.target.value,
+                                    })
+                                }
+                            >
+                                {marketSelectOptions.length > 0 ? (
+                                    marketSelectOptions.map((waypoint) => (
+                                        <option
+                                            key={`market-${waypoint.symbol}`}
+                                            value={waypoint.symbol}
+                                        >
+                                            {waypoint.symbol}
+                                            {waypoint.type
+                                                ? ` (${waypoint.type})`
+                                                : ""}
+                                        </option>
+                                    ))
+                                ) : (
+                                    <option value={ship.nav.waypointSymbol}>
+                                        {ship.nav.waypointSymbol}
+                                    </option>
+                                )}
+                            </select>
+                        </label>
                         <label className={styles.automationField}>
                             <span>Trade symbol</span>
                             <input
@@ -237,6 +396,63 @@ const AutomationCard = ({
                         }
                     />
                 </label>
+                <label className={styles.automationField}>
+                    <span>Min fuel %</span>
+                    <input
+                        type="number"
+                        min={1}
+                        max={100}
+                        value={config.minFuelPercent ?? 15}
+                        onChange={(event) =>
+                            onUpdate({
+                                minFuelPercent: Number(event.target.value),
+                            })
+                        }
+                    />
+                </label>
+                <label className={styles.automationToggle}>
+                    <input
+                        type="checkbox"
+                        checked={Boolean(config.autoRefuel)}
+                        onChange={(event) =>
+                            onUpdate({ autoRefuel: event.target.checked })
+                        }
+                    />
+                    <span>Auto-refuel when low</span>
+                </label>
+                {!isContractMode && (
+                    <label className={styles.automationField}>
+                        <span>Min cargo free units</span>
+                        <input
+                            type="number"
+                            min={0}
+                            value={config.minCargoFreeUnits ?? 0}
+                            onChange={(event) =>
+                                onUpdate({
+                                    minCargoFreeUnits: Number(
+                                        event.target.value,
+                                    ),
+                                })
+                            }
+                        />
+                    </label>
+                )}
+                {validationMessages.length > 0 && (
+                    <div className={styles.automationWarning}>
+                        {validationMessages.join(" ")}
+                    </div>
+                )}
+                {backoffLabel && (
+                    <div className={styles.automationNotice}>
+                        {backoffLabel}
+                    </div>
+                )}
+                {lowFuelWithoutRefuel && (
+                    <div className={styles.automationNotice}>
+                        Fuel below threshold. Enable auto-refuel or refuel
+                        manually.
+                    </div>
+                )}
             </div>
 
             {(transit.isInTransit || cooldown.isCoolingDown) && (
@@ -292,21 +508,41 @@ const AutomationCard = ({
                     )}
                 </div>
                 <div className={styles.automationButtons}>
-                    {isRunning ? (
+                    {isRunning && (
+                        <button
+                            type="button"
+                            className={styles.automationPause}
+                            onClick={onPause}
+                        >
+                            Pause
+                        </button>
+                    )}
+                    {isPaused && (
+                        <button
+                            type="button"
+                            className={styles.automationStart}
+                            onClick={onResume}
+                        >
+                            Resume
+                        </button>
+                    )}
+                    {!isRunning && !isPaused && (
+                        <button
+                            type="button"
+                            className={styles.automationStart}
+                            onClick={onStart}
+                            disabled={!canStart}
+                        >
+                            Start
+                        </button>
+                    )}
+                    {(isRunning || isPaused) && (
                         <button
                             type="button"
                             className={styles.automationStop}
                             onClick={onStop}
                         >
                             Stop
-                        </button>
-                    ) : (
-                        <button
-                            type="button"
-                            className={styles.automationStart}
-                            onClick={onStart}
-                        >
-                            Start
                         </button>
                     )}
                 </div>
@@ -334,6 +570,9 @@ const AutomationCard = ({
                                     {new Date(
                                         entry.timestamp,
                                     ).toLocaleTimeString()}
+                                    {formatLogDuration(entry.durationMs)
+                                        ? ` • ${formatLogDuration(entry.durationMs)}`
+                                        : ""}
                                 </span>
                             </li>
                         ))}
@@ -354,10 +593,12 @@ const Automation = () => {
     const { data: ships, isLoading, error } = useGetShips();
     const {
         configs,
-        running,
+        runState,
         status,
         upsertConfig,
         startAutomation,
+        pauseAutomation,
+        resumeAutomation,
         stopAutomation,
         stopAll,
     } = useAutomation();
@@ -368,17 +609,32 @@ const Automation = () => {
             return {
                 shipSymbol: ship.symbol,
                 mode: "mine_and_sell" as AutomationMode,
+                templateId: getTemplateIdForMode("mine_and_sell"),
                 mineWaypoint: ship.nav.waypointSymbol,
                 marketWaypoint: ship.nav.waypointSymbol,
                 tradeSymbol: "IRON_ORE",
                 sellAtUnits: ship.cargo.capacity,
                 intervalSeconds: 15,
+                minFuelPercent: 15,
+                minCargoFreeUnits: Math.max(
+                    5,
+                    Math.floor(ship.cargo.capacity * 0.1),
+                ),
+                autoRefuel: false,
             };
         }
 
         return {
             ...stored,
             mode: stored.mode ?? ("mine_and_sell" as AutomationMode),
+            templateId:
+                stored.templateId ??
+                getTemplateIdForMode(stored.mode ?? "mine_and_sell"),
+            minFuelPercent: stored.minFuelPercent ?? 15,
+            minCargoFreeUnits:
+                stored.minCargoFreeUnits ??
+                Math.max(5, Math.floor(ship.cargo.capacity * 0.1)),
+            autoRefuel: stored.autoRefuel ?? false,
         };
     };
 
@@ -412,7 +668,8 @@ const Automation = () => {
                     {ships.map((ship) => {
                         const config = getConfig(ship);
                         const shipStatus = status[ship.symbol];
-                        const isRunning = Boolean(running[ship.symbol]);
+                        const currentRunState =
+                            runState[ship.symbol] ?? "stopped";
 
                         return (
                             <AutomationCard
@@ -420,7 +677,7 @@ const Automation = () => {
                                 ship={ship}
                                 config={config}
                                 status={shipStatus}
-                                isRunning={isRunning}
+                                runState={currentRunState}
                                 onUpdate={(update) =>
                                     upsertConfig({ ...config, ...update })
                                 }
@@ -428,6 +685,8 @@ const Automation = () => {
                                     upsertConfig(config);
                                     startAutomation(ship.symbol);
                                 }}
+                                onPause={() => pauseAutomation(ship.symbol)}
+                                onResume={() => resumeAutomation(ship.symbol)}
                                 onStop={() => stopAutomation(ship.symbol)}
                             />
                         );

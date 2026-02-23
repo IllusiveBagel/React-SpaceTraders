@@ -15,13 +15,19 @@ import Market from "pages/Market";
 import Shipyard from "pages/Shipyard";
 import Map from "pages/Map";
 import Waypoint from "pages/Waypoint";
+import SelectAgent from "pages/SelectAgent";
 import { AutomationProvider } from "automation/AutomationProvider";
+import RequireAgent from "components/Auth/RequireAgent";
 
 import "./index.css";
 
 const router = createBrowserRouter([
     {
-        element: <Layout />,
+        element: (
+            <RequireAgent>
+                <Layout />
+            </RequireAgent>
+        ),
         children: [
             {
                 path: "/",
@@ -68,6 +74,10 @@ const router = createBrowserRouter([
                 element: <Waypoint />,
             },
         ],
+    },
+    {
+        path: "/select-agent",
+        element: <SelectAgent />,
     },
 ]);
 

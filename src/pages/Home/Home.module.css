@@ -58,6 +58,11 @@
     color: var(--text-primary);
 }
 
+.metaSubValue {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
 .metaValueRow {
     display: flex;
     align-items: center;
@@ -294,6 +299,39 @@
     color: var(--text-secondary);
 }
 
+.alertList {
+    display: grid;
+    gap: 14px;
+}
+
+.alertItem {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 6px 12px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+}
+
+.alertLabel {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.alertValue {
+    justify-self: end;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.alertDetail {
+    grid-column: 1 / -1;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
 .progressList {
     display: flex;
     flex-direction: column;
@@ -367,6 +405,27 @@
 .barValue {
     color: var(--text-secondary);
     font-size: 0.78rem;
+}
+
+.quickActions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+}
+
+.quickAction {
+    border: 1px solid var(--border);
+    background: var(--surface-soft);
+    color: var(--text-primary);
+    padding: 10px 12px;
+    border-radius: 12px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.quickAction:hover {
+    border-color: var(--accent);
+    color: var(--accent);
 }
 
 .emptyState {

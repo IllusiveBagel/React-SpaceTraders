@@ -41,6 +41,22 @@
     color: var(--text-primary);
 }
 
+.switchButton {
+    margin-top: 24px;
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface-soft);
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.switchButton:hover {
+    color: var(--text-primary);
+    border-color: var(--border-strong, var(--border));
+}
+
 @media (max-width: 900px) {
     .sidebar {
         width: 100%;

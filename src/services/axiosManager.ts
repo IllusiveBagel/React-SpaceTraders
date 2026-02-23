@@ -1,5 +1,7 @@
 import axios, { type AxiosInstance, type AxiosError } from "axios";
 
+import { getAgentToken } from "services/tokenStore";
+
 type RuntimeEnv = Record<string, string> | undefined;
 
 const getRuntimeEnv = (): RuntimeEnv => {
@@ -11,28 +13,9 @@ const getRuntimeEnv = (): RuntimeEnv => {
 };
 
 const runtimeEnv = getRuntimeEnv();
-const authToken =
-    runtimeEnv?.VITE_AUTH_TOKEN ||
-    (import.meta.env.VITE_AUTH_TOKEN as string | undefined);
 const baseUrl =
     runtimeEnv?.VITE_API_BASE_URL ||
     (import.meta.env.VITE_API_BASE_URL as string | undefined);
-
-const axiosManager: AxiosInstance = axios.create({
-    baseURL: baseUrl,
-    headers: {
-        "Content-Type": "application/json",
-    },
-});
-
-axiosManager.interceptors.request.use((config) => {
-    if (authToken) {
-        config.headers = config.headers ?? {};
-        config.headers.Authorization = `Bearer ${authToken}`;
-    }
-
-    return config;
-});
 
 type ApiErrorShape = {
     error?: {
@@ -67,20 +50,45 @@ const getErrorMessage = (error: unknown) => {
     return { message: "Request failed." };
 };
 
-axiosManager.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        const { message, status, data } = getErrorMessage(error);
-        const formattedError = new Error(message) as Error & {
-            status?: number;
-            data?: unknown;
-        };
+const createApiClient = (getToken?: () => string | undefined) => {
+    const client: AxiosInstance = axios.create({
+        baseURL: baseUrl,
+        headers: {
+            "Content-Type": "application/json",
+        },
+    });
 
-        formattedError.status = status;
-        formattedError.data = data;
+    client.interceptors.request.use((config) => {
+        const token = getToken?.();
 
-        return Promise.reject(formattedError);
-    },
-);
+        if (token && !config.headers?.Authorization) {
+            config.headers = config.headers ?? {};
+            config.headers.Authorization = `Bearer ${token}`;
+        }
 
+        return config;
+    });
+
+    client.interceptors.response.use(
+        (response) => response,
+        (error) => {
+            const { message, status, data } = getErrorMessage(error);
+            const formattedError = new Error(message) as Error & {
+                status?: number;
+                data?: unknown;
+            };
+
+            formattedError.status = status;
+            formattedError.data = data;
+
+            return Promise.reject(formattedError);
+        },
+    );
+
+    return client;
+};
+
+const axiosManager = createApiClient(() => getAgentToken());
+
+export { createApiClient, getRuntimeEnv };
 export default axiosManager;

@@ -14,6 +14,7 @@ import {
     jettisonCargo,
     navigateShip,
     orbitShip,
+    refuelShip,
     sellCargo,
 } from "services/shipActions";
 import { deliverContract, fulfillContract } from "services/contractActions";
@@ -21,8 +22,9 @@ import { runAutomationStep } from "./automationEngine";
 import { AutomationContext } from "./AutomationContext";
 import type {
     AutomationContextValue,
-    AutomationMap,
     AutomationLogEntry,
+    AutomationMap,
+    AutomationRunState,
     AutomationStatus,
     MiningAutomationConfig,
 } from "./types";
@@ -31,6 +33,7 @@ import type { Contract } from "types/contract";
 
 const STORAGE_KEY = "spacetraders-automation-configs";
 const RUNNING_KEY = "spacetraders-automation-running";
+const RUN_STATE_KEY = "spacetraders-automation-run-state";
 const STATUS_KEY = "spacetraders-automation-status";
 
 const readMap = <T,>(key: string): AutomationMap<T> => {
@@ -58,6 +61,29 @@ const readConfigs = (): AutomationMap<MiningAutomationConfig> => {
     return readMap<MiningAutomationConfig>(STORAGE_KEY);
 };
 
+const readRunState = (): AutomationMap<AutomationRunState> => {
+    if (typeof window === "undefined") {
+        return {};
+    }
+
+    const runState = readMap<AutomationRunState>(RUN_STATE_KEY);
+    if (Object.keys(runState).length > 0) {
+        return runState;
+    }
+
+    const legacyRunning = readMap<boolean>(RUNNING_KEY);
+    if (Object.keys(legacyRunning).length === 0) {
+        return {};
+    }
+
+    return Object.fromEntries(
+        Object.entries(legacyRunning).map(([key, value]) => [
+            key,
+            value ? "running" : "stopped",
+        ]),
+    );
+};
+
 type AutomationProviderProps = {
     children: ReactNode;
 };
@@ -67,8 +93,8 @@ const AutomationProvider = ({ children }: AutomationProviderProps) => {
     const [configs, setConfigs] = useState<
         AutomationMap<MiningAutomationConfig>
     >(() => readConfigs());
-    const [running, setRunning] = useState<AutomationMap<boolean>>(() =>
-        readMap<boolean>(RUNNING_KEY),
+    const [runState, setRunState] = useState<AutomationMap<AutomationRunState>>(
+        () => readRunState(),
     );
     const [status, setStatus] = useState<AutomationMap<AutomationStatus>>(() =>
         readMap<AutomationStatus>(STATUS_KEY),
@@ -92,8 +118,8 @@ const AutomationProvider = ({ children }: AutomationProviderProps) => {
             return;
         }
 
-        window.localStorage.setItem(RUNNING_KEY, JSON.stringify(running));
-    }, [running]);
+        window.localStorage.setItem(RUN_STATE_KEY, JSON.stringify(runState));
+    }, [runState]);
 
     useEffect(() => {
         if (typeof window === "undefined") {
@@ -107,18 +133,47 @@ const AutomationProvider = ({ children }: AutomationProviderProps) => {
         setConfigs((prev) => ({ ...prev, [config.shipSymbol]: config }));
     }, []);
 
-    const stopAutomation = useCallback((shipSymbol: string) => {
-        setRunning((prev) => ({ ...prev, [shipSymbol]: false }));
-        const timer = timersRef.current[shipSymbol];
-        if (timer) {
-            window.clearInterval(timer);
-            delete timersRef.current[shipSymbol];
-        }
-        delete backoffRef.current[shipSymbol];
-    }, []);
+    const setState = useCallback(
+        (shipSymbol: string, nextState: AutomationRunState) => {
+            setRunState((prev) => ({ ...prev, [shipSymbol]: nextState }));
+        },
+        [],
+    );
+
+    const stopAutomation = useCallback(
+        (shipSymbol: string) => {
+            setState(shipSymbol, "stopped");
+            const timer = timersRef.current[shipSymbol];
+            if (timer) {
+                window.clearInterval(timer);
+                delete timersRef.current[shipSymbol];
+            }
+            delete backoffRef.current[shipSymbol];
+        },
+        [setState],
+    );
+
+    const pauseAutomation = useCallback(
+        (shipSymbol: string) => {
+            setState(shipSymbol, "paused");
+            const timer = timersRef.current[shipSymbol];
+            if (timer) {
+                window.clearInterval(timer);
+                delete timersRef.current[shipSymbol];
+            }
+        },
+        [setState],
+    );
+
+    const resumeAutomation = useCallback(
+        (shipSymbol: string) => {
+            setState(shipSymbol, "running");
+        },
+        [setState],
+    );
 
     const stopAll = useCallback(() => {
-        setRunning({});
+        setRunState({});
         Object.values(timersRef.current).forEach((timer) => {
             window.clearInterval(timer);
         });
@@ -126,9 +181,12 @@ const AutomationProvider = ({ children }: AutomationProviderProps) => {
         backoffRef.current = {};
     }, []);
 
-    const startAutomation = useCallback((shipSymbol: string) => {
-        setRunning((prev) => ({ ...prev, [shipSymbol]: true }));
-    }, []);
+    const startAutomation = useCallback(
+        (shipSymbol: string) => {
+            setState(shipSymbol, "running");
+        },
+        [setState],
+    );
 
     const recordStatus = useCallback(
         (
@@ -198,6 +256,7 @@ const AutomationProvider = ({ children }: AutomationProviderProps) => {
                     message: `Backing off for ${delaySeconds}s.`,
                     timestamp,
                     type: "system",
+                    result: "system",
                 },
             );
         },
@@ -223,6 +282,8 @@ const AutomationProvider = ({ children }: AutomationProviderProps) => {
                         message: "Missing automation config.",
                         timestamp,
                         type: "system",
+                        result: "system",
+                        durationMs: 0,
                     },
                 );
                 return;
@@ -234,9 +295,83 @@ const AutomationProvider = ({ children }: AutomationProviderProps) => {
             }
 
             inFlightRef.current[shipSymbol] = true;
+            const startedAt = Date.now();
 
             try {
                 const ship = await fetchShip(shipSymbol);
+                const fuelCapacity = ship.fuel.capacity || 0;
+                const minFuelPercent = config.minFuelPercent ?? 15;
+                if (fuelCapacity > 0) {
+                    const fuelPercent =
+                        (ship.fuel.current / fuelCapacity) * 100;
+                    if (fuelPercent < minFuelPercent) {
+                        if (config.autoRefuel) {
+                            if (ship.nav.status === "IN_ORBIT") {
+                                await dockShip(shipSymbol);
+                            }
+                            await refuelShip(shipSymbol);
+                            const timestamp = new Date().toISOString();
+                            recordStatus(
+                                shipSymbol,
+                                {
+                                    lastAction: "Auto-refueled ship.",
+                                    lastUpdated: timestamp,
+                                },
+                                {
+                                    message: "Auto-refueled ship.",
+                                    timestamp,
+                                    type: "action",
+                                    action: "refuel",
+                                    durationMs: Date.now() - startedAt,
+                                    result: "success",
+                                },
+                            );
+                            return;
+                        }
+                        const timestamp = new Date().toISOString();
+                        recordStatus(
+                            shipSymbol,
+                            {
+                                lastAction: `Fuel below ${minFuelPercent}%.`,
+                                lastUpdated: timestamp,
+                            },
+                            {
+                                message: `Fuel below ${minFuelPercent}%.`,
+                                timestamp,
+                                type: "system",
+                                result: "system",
+                                durationMs: Date.now() - startedAt,
+                            },
+                        );
+                        return;
+                    }
+                }
+
+                if (typeof config.minCargoFreeUnits === "number") {
+                    const freeUnits = Math.max(
+                        0,
+                        ship.cargo.capacity - ship.cargo.units,
+                    );
+                    if (freeUnits < config.minCargoFreeUnits) {
+                        const timestamp = new Date().toISOString();
+                        recordStatus(
+                            shipSymbol,
+                            {
+                                lastAction: `Cargo space below ${config.minCargoFreeUnits} units.`,
+                                lastUpdated: timestamp,
+                            },
+                            {
+                                message: `Cargo space below ${config.minCargoFreeUnits} units.`,
+                                timestamp,
+                                type: "system",
+                                result: "system",
+                                durationMs: Date.now() - startedAt,
+                            },
+                        );
+                        return;
+                    }
+                }
+
                 const contracts =
                     config.mode === "contract_jobs"
                         ? await fetchContracts()
@@ -271,6 +406,7 @@ const AutomationProvider = ({ children }: AutomationProviderProps) => {
                 );
 
                 const timestamp = new Date().toISOString();
+                const durationMs = Date.now() - startedAt;
                 recordStatus(
                     shipSymbol,
                     {
@@ -284,6 +420,9 @@ const AutomationProvider = ({ children }: AutomationProviderProps) => {
                         message: decision.message,
                         timestamp,
                         type: "action",
+                        action: decision.action,
+                        durationMs,
+                        result: "success",
                     },
                 );
 
@@ -302,6 +441,7 @@ const AutomationProvider = ({ children }: AutomationProviderProps) => {
                         ? error.message
                         : "Automation failed.";
                 const timestamp = new Date().toISOString();
+                const durationMs = Date.now() - startedAt;
                 recordStatus(
                     shipSymbol,
                     {
@@ -312,6 +452,8 @@ const AutomationProvider = ({ children }: AutomationProviderProps) => {
                         message,
                         timestamp,
                         type: "error",
+                        durationMs,
+                        result: "error",
                     },
                 );
                 scheduleBackoff(shipSymbol, config);
@@ -331,9 +473,9 @@ const AutomationProvider = ({ children }: AutomationProviderProps) => {
     );
 
     useEffect(() => {
-        Object.entries(running).forEach(([shipSymbol, isRunning]) => {
+        Object.entries(runState).forEach(([shipSymbol, state]) => {
             const config = configs[shipSymbol];
-            if (!isRunning || !config) {
+            if (state !== "running" || !config) {
                 if (timersRef.current[shipSymbol]) {
                     window.clearInterval(timersRef.current[shipSymbol]);
                     delete timersRef.current[shipSymbol];
@@ -345,21 +487,25 @@ const AutomationProvider = ({ children }: AutomationProviderProps) => {
                 return;
             }
 
-            const intervalMs = Math.max(5, config.intervalSeconds) * 1000;
+            const intervalSeconds = Math.max(5, config.intervalSeconds || 5);
+            const intervalMs = intervalSeconds * 1000;
+
             timersRef.current[shipSymbol] = window.setInterval(() => {
                 runTick(shipSymbol);
             }, intervalMs);
 
             runTick(shipSymbol);
         });
-    }, [configs, runTick, running]);
+    }, [configs, runState, runTick]);
 
     const value: AutomationContextValue = {
         configs,
-        running,
+        runState,
         status,
         upsertConfig,
         startAutomation,
+        pauseAutomation,
+        resumeAutomation,
         stopAutomation,
         stopAll,
     };

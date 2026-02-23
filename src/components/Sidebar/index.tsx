@@ -1,8 +1,20 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+
+import { clearAgentToken } from "services/tokenStore";
 
 import styles from "./Sidebar.module.css";
 
 const Sidebar = () => {
+    const navigate = useNavigate();
+    const queryClient = useQueryClient();
+
+    const handleSwitchAgent = () => {
+        clearAgentToken();
+        queryClient.clear();
+        navigate("/select-agent");
+    };
+
     return (
         <div className={styles.sidebar}>
             <h2 className={styles.brand}>Space Traders</h2>
@@ -48,6 +60,13 @@ const Sidebar = () => {
                     </Link>
                 </li>
             </ul>
+            <button
+                type="button"
+                className={styles.switchButton}
+                onClick={handleSwitchAgent}
+            >
+                Switch agent
+            </button>
         </div>
     );
 };

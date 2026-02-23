@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 
 import useGetAgent from "hooks/agent/useGetAgent";
 import useGetContracts from "hooks/contracts/useGetContracts";
@@ -150,6 +151,15 @@ const Home = () => {
         return creditsValues[creditsValues.length - 1] - creditsValues[0];
     }, [creditsValues]);
 
+    const creditsPerHour = useMemo(() => {
+        if (creditsHistory.length < 2) return undefined;
+        const first = creditsHistory[0];
+        const last = creditsHistory[creditsHistory.length - 1];
+        const hours = (last.ts - first.ts) / (1000 * 60 * 60);
+        if (hours <= 0) return undefined;
+        return (last.value - first.value) / hours;
+    }, [creditsHistory]);
+
     const sparklinePath = useMemo(
         () => buildSparklinePath(creditsValues),
         [creditsValues],
@@ -203,6 +213,35 @@ const Home = () => {
                 };
             })
             .sort((a, b) => a.remaining - b.remaining);
+    }, [contracts]);
+
+    const lowFuelShips = useMemo(() => {
+        return (ships ?? []).filter((ship) => {
+            const capacity = ship.fuel.capacity || 0;
+            if (capacity === 0) return false;
+            return ship.fuel.current / capacity <= 0.2;
+        });
+    }, [ships]);
+
+    const shipsOnCooldown = useMemo(() => {
+        return (ships ?? []).filter((ship) =>
+            ship.cooldown?.remainingSeconds
+                ? ship.cooldown.remainingSeconds > 0
+                : false,
+        );
+    }, [ships]);
+
+    const expiringContracts = useMemo(() => {
+        const now = Date.now();
+        const threshold = 24 * 60 * 60 * 1000;
+
+        return (contracts ?? []).filter((contract) => {
+            if (!contract.accepted || contract.fulfilled) return false;
+            const deadline = new Date(contract.terms.deadline).getTime();
+            if (Number.isNaN(deadline)) return false;
+            const remaining = deadline - now;
+            return remaining > 0 && remaining <= threshold;
+        });
     }, [contracts]);
 
     const topCommodities = useMemo(() => {
@@ -282,6 +321,11 @@ const Home = () => {
                         <span className={styles.metaLabel}>Credits</span>
                         <span className={styles.metaValue}>
                             {agent ? formatNumber(agent.credits) : "--"}
+                        </span>
+                        <span className={styles.metaSubValue}>
+                            {typeof creditsPerHour === "number"
+                                ? `${creditsPerHour >= 0 ? "+" : ""}${formatNumber(creditsPerHour)}/hr`
+                                : "--"}
                         </span>
                     </div>
                     <div className={styles.metaBlock}>
@@ -435,6 +479,72 @@ const Home = () => {
                 <article className={styles.card}>
                     <div className={styles.cardHeader}>
                         <div>
+                            <h2 className={styles.cardTitle}>Ops alerts</h2>
+                            <p className={styles.cardSub}>
+                                Items needing attention
+                            </p>
+                        </div>
+                    </div>
+                    <div className={styles.cardBody}>
+                        <div className={styles.alertList}>
+                            <div className={styles.alertItem}>
+                                <span className={styles.alertLabel}>
+                                    Low fuel ships
+                                </span>
+                                <span className={styles.alertValue}>
+                                    {lowFuelShips.length}
+                                </span>
+                                <span className={styles.alertDetail}>
+                                    {lowFuelShips.length > 0
+                                        ? lowFuelShips
+                                              .slice(0, 3)
+                                              .map((ship) => ship.symbol)
+                                              .join(", ")
+                                        : "All ships fueled"}
+                                </span>
+                            </div>
+                            <div className={styles.alertItem}>
+                                <span className={styles.alertLabel}>
+                                    Cooldowns active
+                                </span>
+                                <span className={styles.alertValue}>
+                                    {shipsOnCooldown.length}
+                                </span>
+                                <span className={styles.alertDetail}>
+                                    {shipsOnCooldown.length > 0
+                                        ? shipsOnCooldown
+                                              .slice(0, 3)
+                                              .map((ship) => ship.symbol)
+                                              .join(", ")
+                                        : "No cooldowns"}
+                                </span>
+                            </div>
+                            <div className={styles.alertItem}>
+                                <span className={styles.alertLabel}>
+                                    Contracts due soon
+                                </span>
+                                <span className={styles.alertValue}>
+                                    {expiringContracts.length}
+                                </span>
+                                <span className={styles.alertDetail}>
+                                    {expiringContracts.length > 0
+                                        ? expiringContracts
+                                              .slice(0, 2)
+                                              .map(
+                                                  (contract) =>
+                                                      `${contract.factionSymbol} ${contract.type}`,
+                                              )
+                                              .join(", ")
+                                        : "No deadlines in 24h"}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <article className={styles.card}>
+                    <div className={styles.cardHeader}>
+                        <div>
                             <h2 className={styles.cardTitle}>
                                 Contract progress
                             </h2>
@@ -481,6 +591,37 @@ const Home = () => {
                                 No active contracts yet.
                             </p>
                         )}
+                    </div>
+                </article>
+
+                <article className={styles.card}>
+                    <div className={styles.cardHeader}>
+                        <div>
+                            <h2 className={styles.cardTitle}>Quick actions</h2>
+                            <p className={styles.cardSub}>Common next steps</p>
+                        </div>
+                    </div>
+                    <div className={styles.cardBody}>
+                        <div className={styles.quickActions}>
+                            <Link className={styles.quickAction} to="/fleet">
+                                Manage fleet
+                            </Link>
+                            <Link
+                                className={styles.quickAction}
+                                to="/contracts"
+                            >
+                                Review contracts
+                            </Link>
+                            <Link className={styles.quickAction} to="/market">
+                                Check markets
+                            </Link>
+                            <Link className={styles.quickAction} to="/shipyard">
+                                Visit shipyard
+                            </Link>
+                            <Link className={styles.quickAction} to="/map">
+                                Open map
+                            </Link>
+                        </div>
                     </div>
                 </article>
 
