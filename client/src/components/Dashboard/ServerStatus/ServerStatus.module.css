@@ -22,57 +22,11 @@
     color: var(--text-secondary);
 }
 
-.statusAnnouncements {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding-top: 10px;
-    border-top: 1px solid var(--border);
-}
-
 .statusSectionLabel {
     margin: 0;
     font-size: 0.72rem;
     text-transform: uppercase;
     letter-spacing: 0.12em;
-    color: var(--text-secondary);
-}
-
-.statusList {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    max-height: 160px;
-    overflow-y: auto;
-    padding-right: 6px;
-}
-
-.statusListItem {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    font-size: 0.85rem;
-    color: var(--text-primary);
-    padding-bottom: 6px;
-    border-bottom: 1px solid rgba(148, 163, 184, 0.2);
-}
-
-.statusListItem:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
-}
-
-.statusListBody {
-    font-size: 0.78rem;
-    color: var(--text-secondary);
-}
-
-.statusEmpty {
-    margin: 0;
-    font-size: 0.85rem;
     color: var(--text-secondary);
 }
 

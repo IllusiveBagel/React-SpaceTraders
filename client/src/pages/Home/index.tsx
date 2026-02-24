@@ -21,6 +21,7 @@ import ServerSnapshot from "components/Dashboard/ServerSnapshot";
 import ContractProgress from "components/Dashboard/ContractProgress";
 
 import styles from "./Home.module.css";
+import Announcements from "components/Dashboard/Announcements";
 
 type HistoryPoint = {
     ts: number;
@@ -325,6 +326,7 @@ const Home = () => {
                     activeContractProgress={activeContractProgress}
                 />
                 <ServerStatus agent={agent ?? { symbol: "" }} />
+                <Announcements />
                 <ServerSnapshot
                     serverStatus={serverStatus}
                     serverStatusLoading={serverStatusLoading}
