@@ -1,34 +1,26 @@
 {
-  "name": "spacetraders",
+  "name": "react-spacetraders-monorepo",
   "private": true,
-  "version": "0.0.0",
-  "type": "module",
+  "version": "0.1.0",
+  "workspaces": [
+    "client",
+    "backend"
+  ],
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "@tanstack/react-query": "^5.90.21",
-    "axios": "^1.13.5",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "react-router": "^7.13.0",
-    "react-router-dom": "^7.13.0"
+    "dev": "concurrently -n backend,client -c blue,green \"npm run dev --workspace backend\" \"npm run dev --workspace client\"",
+    "dev:backend": "npm run dev --workspace backend",
+    "dev:client": "npm run dev --workspace client",
+    "build": "npm run build --workspace client",
+    "lint": "npm run lint --workspace client",
+    "docker:build": "npm run docker:build:backend && npm run docker:build:frontend",
+    "docker:publish": "npm run docker:publish:backend && npm run docker:publish:frontend",
+    "docker:release": "npm run docker:build && npm run docker:publish",
+    "docker:build:backend": "docker build -f backend/Dockerfile -t ${DOCKER_NAMESPACE:-illusivebagel/react-spacetraders}-backend:${IMAGE_TAG:-latest} backend",
+    "docker:build:frontend": "docker build -f client/Dockerfile -t ${DOCKER_NAMESPACE:-illusivebagel/react-spacetraders}-frontend:${IMAGE_TAG:-latest} client",
+    "docker:publish:backend": "docker push ${DOCKER_NAMESPACE:-illusivebagel/react-spacetraders}-backend:${IMAGE_TAG:-latest}",
+    "docker:publish:frontend": "docker push ${DOCKER_NAMESPACE:-illusivebagel/react-spacetraders}-frontend:${IMAGE_TAG:-latest}"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.1",
-    "@types/node": "^24.10.1",
-    "@types/react": "^19.2.7",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^5.1.1",
-    "eslint": "^9.39.1",
-    "eslint-plugin-react-hooks": "^7.0.1",
-    "eslint-plugin-react-refresh": "^0.4.24",
-    "globals": "^16.5.0",
-    "typescript": "~5.9.3",
-    "typescript-eslint": "^8.48.0",
-    "vite": "^7.3.1"
+    "concurrently": "^9.2.1"
   }
 }

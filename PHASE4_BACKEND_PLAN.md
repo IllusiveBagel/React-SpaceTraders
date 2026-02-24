@@ -4,6 +4,15 @@
 
 Run automation jobs while the UI is closed, keep logs and status in sync, and provide secure token handling plus notifications.
 
+## Current implementation status (23 Feb 2026)
+
+- Backend scaffold now lives in-repo at `backend/`.
+- Docker Compose now runs frontend + backend together.
+- Current backend MVP includes:
+    - agent token storage and selection
+    - manual reset cycles
+    - per-agent/per-cycle stats snapshots
+
 ## Recommended stack
 
 - API: Node.js + TypeScript (Fastify or Express)
@@ -35,6 +44,26 @@ Run automation jobs while the UI is closed, keep logs and status in sync, and pr
 - GET /runs/:id: get run status
 - GET /runs/:id/logs: fetch logs
 - GET /stream/runs/:id: live updates (SSE/WebSocket)
+
+## API surface (implemented first slice)
+
+- GET /health
+- GET /cycles/current
+- POST /cycles/reset
+- GET /agents
+- POST /agents
+- POST /agents/select
+- DELETE /agents/:symbol
+- GET /stats/:symbol
+- POST /stats/:symbol/snapshots
+- GET /jobs
+- GET /jobs/:id
+- POST /jobs
+- POST /jobs/:id/start
+- POST /jobs/:id/pause
+- POST /jobs/:id/stop
+- GET /runs/:id
+- GET /runs/:id/logs
 
 ## Scheduler and execution
 

@@ -1,11 +1,18 @@
 import { useEffect } from "react";
 
 import useGetShips from "hooks/fleet/useGetShips";
+import useGetAgent from "hooks/agent/useGetAgent";
 import useTransitProgress from "hooks/fleet/useTransitProgress";
 import useCooldownProgress from "hooks/fleet/useCooldownProgress";
 import useAutomation from "automation/useAutomation";
 import useGetMiningWaypoints from "hooks/systems/useGetMiningWaypoints";
 import useGetMarketWaypoints from "hooks/systems/useGetMarketWaypoints";
+import useGetBackendJobs from "hooks/backend/useGetBackendJobs";
+import useUpsertBackendJob from "hooks/backend/useUpsertBackendJob";
+import useSetBackendJobState from "hooks/backend/useSetBackendJobState";
+import { isBackendConfigured } from "services/backendAxios";
+import { useQuery } from "@tanstack/react-query";
+import { getBackendRunLogs } from "services/backendJobs";
 import {
     automationTemplates,
     getTemplateById,
@@ -30,11 +37,19 @@ type AutomationCardProps = {
     config: MiningAutomationConfig;
     runState: AutomationRunState;
     status?: AutomationStatus;
+    backendJobId?: string;
+    backendRunId?: string;
+    isBackendRunning?: boolean;
+    isBackendPending?: boolean;
     onUpdate: (update: Partial<MiningAutomationConfig>) => void;
     onStart: () => void;
     onPause: () => void;
     onResume: () => void;
     onStop: () => void;
+    onBackendSave?: () => void;
+    onBackendStart?: () => void;
+    onBackendPause?: () => void;
+    onBackendStop?: () => void;
 };
 
 const getTemplateDefaults = (templateId: string, ship: Ship) => {
@@ -88,11 +103,19 @@ const AutomationCard = ({
     config,
     runState,
     status,
+    backendJobId,
+    backendRunId,
+    isBackendRunning,
+    isBackendPending,
     onUpdate,
     onStart,
     onPause,
     onResume,
     onStop,
+    onBackendSave,
+    onBackendStart,
+    onBackendPause,
+    onBackendStop,
 }: AutomationCardProps) => {
     const { data: miningWaypoints } = useGetMiningWaypoints(
         ship.nav.systemSymbol,
@@ -102,6 +125,16 @@ const AutomationCard = ({
     );
     const transit = useTransitProgress(ship);
     const cooldown = useCooldownProgress(ship);
+
+    // Fetch backend job logs if job exists
+    const { data: backendLogsData } = useQuery({
+        queryKey: ["backend", "run", backendRunId, "logs"],
+        queryFn: () => (backendRunId ? getBackendRunLogs(backendRunId) : null),
+        enabled: !!backendRunId,
+        refetchInterval: backendRunId && isBackendRunning ? 3000 : false,
+    });
+
+    const backendLogs = backendLogsData?.logs ?? [];
 
     const resolveDefaultWaypoint = (
         options: { symbol: string }[],
@@ -550,6 +583,156 @@ const AutomationCard = ({
                 </div>
             </div>
 
+            {isBackendConfigured && (
+                <div className={styles.automationBackendPanel}>
+                    <div
+                        style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            gap: "12px",
+                        }}
+                    >
+                        <p className={styles.automationBackendLabel}>
+                            Background automation
+                        </p>
+                        <div className={styles.automationBackendStatus}>
+                            {!backendJobId ? (
+                                <div
+                                    className={
+                                        styles.automationBackendStatusBadge +
+                                        " " +
+                                        styles.automationBackendStatusNone
+                                    }
+                                >
+                                    <span>●</span>
+                                    <span>No job saved</span>
+                                </div>
+                            ) : isBackendRunning ? (
+                                <div
+                                    className={
+                                        styles.automationBackendStatusBadge +
+                                        " " +
+                                        styles.automationBackendStatusRunning
+                                    }
+                                >
+                                    <span>●</span>
+                                    <span>Running</span>
+                                </div>
+                            ) : (
+                                <div
+                                    className={
+                                        styles.automationBackendStatusBadge +
+                                        " " +
+                                        styles.automationBackendStatusStopped
+                                    }
+                                >
+                                    <span>●</span>
+                                    <span>Stopped</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                    <div className={styles.automationBackendButtons}>
+                        <button
+                            type="button"
+                            className={styles.automationBackendSave}
+                            onClick={onBackendSave}
+                            disabled={isBackendPending}
+                        >
+                            {backendJobId ? "Update job" : "Save job"}
+                        </button>
+                        {backendJobId && (
+                            <>
+                                {isBackendRunning && (
+                                    <>
+                                        <button
+                                            type="button"
+                                            className={
+                                                styles.automationBackendPause
+                                            }
+                                            onClick={onBackendPause}
+                                            disabled={isBackendPending}
+                                        >
+                                            Pause
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className={
+                                                styles.automationBackendStop
+                                            }
+                                            onClick={onBackendStop}
+                                            disabled={isBackendPending}
+                                        >
+                                            Stop
+                                        </button>
+                                    </>
+                                )}
+                                {!isBackendRunning && (
+                                    <button
+                                        type="button"
+                                        className={
+                                            styles.automationBackendStart
+                                        }
+                                        onClick={onBackendStart}
+                                        disabled={isBackendPending}
+                                    >
+                                        Start
+                                    </button>
+                                )}
+                            </>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {backendJobId && (
+                <div className={styles.automationBackendLog}>
+                    <p className={styles.automationBackendLogTitle}>
+                        Background job log
+                    </p>
+                    {!backendRunId ? (
+                        <p className={styles.automationBackendLogEmpty}>
+                            No run started yet
+                        </p>
+                    ) : backendLogs && backendLogs.length > 0 ? (
+                        <ul className={styles.automationBackendLogList}>
+                            {[...backendLogs].reverse().map((log, index) => (
+                                <li
+                                    key={`be-log-${index}`}
+                                    className={styles.automationBackendLogItem}
+                                >
+                                    <span
+                                        className={
+                                            styles.automationBackendLogMessage
+                                        }
+                                    >
+                                        {log.message}
+                                    </span>
+                                    <span
+                                        className={
+                                            styles.automationBackendLogTime
+                                        }
+                                    >
+                                        {new Date(
+                                            log.timestamp,
+                                        ).toLocaleTimeString([], {
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                            second: "2-digit",
+                                        })}
+                                    </span>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p className={styles.automationBackendLogEmpty}>
+                            No logs yet
+                        </p>
+                    )}
+                </div>
+            )}
+
             <div className={styles.automationLog}>
                 <p className={styles.automationLogTitle}>Recent actions</p>
                 {hasActivity ? (
@@ -593,6 +776,7 @@ const Automation = () => {
     usePageTitle("Fleet automation");
 
     const { data: ships, isLoading, error } = useGetShips();
+    const { data: agent } = useGetAgent();
     const {
         configs,
         runState,
@@ -604,6 +788,18 @@ const Automation = () => {
         stopAutomation,
         stopAll,
     } = useAutomation();
+
+    // Backend job integration
+    const { data: backendJobs } = useGetBackendJobs(agent?.symbol);
+    const { mutate: upsertBackendJob, isPending: isUpsertPending } =
+        useUpsertBackendJob();
+    const { mutate: setBackendJobState, isPending: isSetStatePending } =
+        useSetBackendJobState();
+
+    // Map backend jobs by ship symbol for easy lookup
+    const backendJobsByShip = new Map(
+        (backendJobs ?? []).map((job) => [job.shipSymbol, job]),
+    );
 
     const getConfig = (ship: Ship) => {
         const stored = configs[ship.symbol];
@@ -672,6 +868,7 @@ const Automation = () => {
                         const shipStatus = status[ship.symbol];
                         const currentRunState =
                             runState[ship.symbol] ?? "stopped";
+                        const backendJob = backendJobsByShip.get(ship.symbol);
 
                         return (
                             <AutomationCard
@@ -680,6 +877,16 @@ const Automation = () => {
                                 config={config}
                                 status={shipStatus}
                                 runState={currentRunState}
+                                backendJobId={backendJob?.id}
+                                backendRunId={
+                                    backendJob?.lastRunId ?? undefined
+                                }
+                                isBackendRunning={
+                                    backendJob?.runState === "running"
+                                }
+                                isBackendPending={
+                                    isUpsertPending || isSetStatePending
+                                }
                                 onUpdate={(update) =>
                                     upsertConfig({ ...config, ...update })
                                 }
@@ -690,6 +897,37 @@ const Automation = () => {
                                 onPause={() => pauseAutomation(ship.symbol)}
                                 onResume={() => resumeAutomation(ship.symbol)}
                                 onStop={() => stopAutomation(ship.symbol)}
+                                onBackendSave={() => {
+                                    if (!agent?.symbol) return;
+                                    upsertBackendJob({
+                                        shipSymbol: ship.symbol,
+                                        agentSymbol: agent.symbol,
+                                        mode: config.mode,
+                                        templateId: config.templateId,
+                                        config,
+                                    });
+                                }}
+                                onBackendStart={() => {
+                                    if (!backendJob?.id) return;
+                                    setBackendJobState({
+                                        jobId: backendJob.id,
+                                        action: "start",
+                                    });
+                                }}
+                                onBackendPause={() => {
+                                    if (!backendJob?.id) return;
+                                    setBackendJobState({
+                                        jobId: backendJob.id,
+                                        action: "pause",
+                                    });
+                                }}
+                                onBackendStop={() => {
+                                    if (!backendJob?.id) return;
+                                    setBackendJobState({
+                                        jobId: backendJob.id,
+                                        action: "stop",
+                                    });
+                                }}
                             />
                         );
                     })}

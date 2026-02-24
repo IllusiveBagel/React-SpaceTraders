@@ -1,0 +1,26 @@
+services:
+  backend:
+    image: illusivebagel/react-spacetraders-backend:latest
+    environment:
+      PORT: 3000
+      SQLITE_PATH: /data/db.sqlite
+      SPACETRADERS_API_BASE_URL: https://api.spacetraders.io/v2
+    volumes:
+      - backend-data:/data
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
+  frontend:
+    image: illusivebagel/react-spacetraders-frontend:latest
+    depends_on:
+      - backend
+    environment:
+      VITE_API_BASE_URL: https://api.spacetraders.io/v2
+      VITE_BACKEND_BASE_URL: /backend
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+
+volumes:
+  backend-data:

@@ -1,73 +1,114 @@
-# React + TypeScript + Vite
+# React SpaceTraders
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend (React + Vite) with an in-repo backend service for agent token custody,
+agent selection, mission-control stats persistence, and manual reset cycles.
 
-Currently, two official plugins are available:
+## Project layout
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- `client/`: frontend app (React + Vite)
+- `backend/`: backend API service (Express)
+- `docker-compose.yml`: runs frontend + backend together
+- `package.json` (root): workspace scripts for running both apps together
 
-## React Compiler
+## Install dependencies (workspace root)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Run both locally (root)
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run dev
 ```
+
+This starts:
+
+- backend dev server via workspace `backend`
+- client dev server via workspace `client`
+
+## Run only one app
+
+```bash
+npm run dev:client
+npm run dev:backend
+```
+
+## Run client directly
+
+```bash
+cd client
+npm install
+npm run dev
+```
+
+## Run backend directly
+
+```bash
+cd backend
+npm install
+npm run dev
+```
+
+Backend defaults:
+
+- Port: `3000`
+- SQLite DB file: `./data/db.sqlite` for local dev (override with `SQLITE_PATH`)
+- SpaceTraders base URL: `https://api.spacetraders.io/v2`
+
+## Run both with Docker Compose
+
+```bash
+docker compose up --build
+```
+
+Services:
+
+- Frontend: `http://localhost:8080`
+- Backend direct: `http://localhost:3000`
+- Backend via frontend proxy: `http://localhost:8080/backend`
+
+The frontend container injects:
+
+- `VITE_API_BASE_URL=https://api.spacetraders.io/v2`
+- `VITE_BACKEND_BASE_URL=/backend`
+
+## Build and publish Docker images
+
+From the repo root:
+
+```bash
+npm run docker:build
+npm run docker:publish
+```
+
+Or do both in one command:
+
+```bash
+npm run docker:release
+```
+
+Optional environment variables:
+
+- `DOCKER_NAMESPACE` (default: `react-spacetraders`)
+- `IMAGE_TAG` (default: `latest`)
+
+Example:
+
+```bash
+DOCKER_NAMESPACE=ghcr.io/your-org IMAGE_TAG=2026-02-24 npm run docker:release
+```
+
+## Backend API (MVP)
+
+- `GET /health`
+- `GET /cycles/current`
+- `POST /cycles/reset`
+- `GET /agents`
+- `POST /agents` (body: `{ "token": "..." }`)
+- `POST /agents/select` (body: `{ "symbol": "..." }`)
+- `DELETE /agents/:symbol`
+- `GET /stats/:symbol?cycleId=...`
+- `POST /stats/:symbol/snapshots`
+
+Stats snapshots are partitioned by `agentSymbol` + active reset cycle.

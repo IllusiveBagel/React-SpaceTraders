@@ -103,6 +103,15 @@
     border: 1px solid #5a2932;
 }
 
+.success {
+    margin-top: 20px;
+    background: #102717;
+    color: #a8e1b4;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid #245836;
+}
+
 @media (max-width: 600px) {
     .card {
         padding: 24px;

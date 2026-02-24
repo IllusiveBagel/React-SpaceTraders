@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 
+import { isBackendConfigured } from "services/backendAxios";
+import useGetBackendCycle from "hooks/backend/useGetBackendCycle";
+import useGetBackendStats from "hooks/backend/useGetBackendStats";
+import useResetBackendCycle from "hooks/backend/useResetBackendCycle";
+import { appendBackendStatsSnapshot } from "services/backendMissionControl";
 import useGetAgent from "hooks/agent/useGetAgent";
 import useGetContracts from "hooks/contracts/useGetContracts";
 import useGetShips from "hooks/fleet/useGetShips";
@@ -15,6 +21,7 @@ type HistoryPoint = {
 };
 
 const CREDITS_HISTORY_KEY = "dashboard:creditsHistory";
+const BACKEND_SNAPSHOT_TS_PREFIX = "dashboard:lastBackendSnapshotAt";
 const HISTORY_MAX_POINTS = 60;
 const HISTORY_MIN_INTERVAL_MS = 5 * 60 * 1000;
 
@@ -129,6 +136,7 @@ const getStatusTone = (status?: string, hasError?: boolean) => {
 
 const Home = () => {
     usePageTitle("Home");
+    const queryClient = useQueryClient();
 
     const { data: agent } = useGetAgent();
     const { data: ships } = useGetShips();
@@ -138,8 +146,125 @@ const Home = () => {
         isLoading: serverStatusLoading,
         isError: serverStatusError,
     } = useGetStatus();
+    const {
+        data: backendCycle,
+        isLoading: backendCycleLoading,
+        isError: backendCycleError,
+    } = useGetBackendCycle();
+    const {
+        data: backendStats,
+        isLoading: backendStatsLoading,
+        isError: backendStatsError,
+    } = useGetBackendStats({
+        agentSymbol: agent?.symbol,
+        cycleId: backendCycle?.id,
+    });
+    const resetBackendCycleMutation = useResetBackendCycle();
+    const [resetMessage, setResetMessage] = useState<string | null>(null);
+    const [resetError, setResetError] = useState<string | null>(null);
 
-    const creditsHistory = useCreditsHistory(agent?.credits);
+    const localCreditsHistory = useCreditsHistory(agent?.credits);
+    const backendCreditsHistory = useMemo(() => {
+        return (backendStats?.snapshots ?? [])
+            .filter(
+                (snapshot) =>
+                    typeof snapshot.credits === "number" &&
+                    typeof snapshot.timestamp === "string",
+            )
+            .map((snapshot) => ({
+                ts: new Date(snapshot.timestamp).getTime(),
+                value: snapshot.credits as number,
+            }))
+            .filter((point) => Number.isFinite(point.ts))
+            .sort((a, b) => a.ts - b.ts)
+            .slice(-HISTORY_MAX_POINTS);
+    }, [backendStats?.snapshots]);
+    const creditsHistory =
+        backendCreditsHistory.length > 0
+            ? backendCreditsHistory
+            : localCreditsHistory;
+
+    useEffect(() => {
+        const hasRequiredData =
+            isBackendConfigured &&
+            Boolean(agent?.symbol) &&
+            typeof agent?.credits === "number" &&
+            Array.isArray(ships) &&
+            Array.isArray(contracts);
+
+        if (!hasRequiredData) {
+            return;
+        }
+
+        const snapshotKey = `${BACKEND_SNAPSHOT_TS_PREFIX}:${agent.symbol}`;
+        const now = Date.now();
+        const rawLastSnapshotAt =
+            typeof window === "undefined"
+                ? undefined
+                : localStorage.getItem(snapshotKey);
+        const lastSnapshotAt = rawLastSnapshotAt
+            ? Number.parseInt(rawLastSnapshotAt, 10)
+            : 0;
+
+        if (lastSnapshotAt && now - lastSnapshotAt < HISTORY_MIN_INTERVAL_MS) {
+            return;
+        }
+
+        const contractsOpen = contracts.filter(
+            (contract) => contract.accepted && !contract.fulfilled,
+        ).length;
+        const contractsFulfilled = contracts.filter(
+            (contract) => contract.fulfilled,
+        ).length;
+
+        appendBackendStatsSnapshot(agent.symbol, {
+            credits: agent.credits,
+            shipCount: ships.length,
+            contractsOpen,
+            contractsFulfilled,
+        })
+            .then(() => {
+                if (typeof window === "undefined") {
+                    return;
+                }
+
+                localStorage.setItem(snapshotKey, String(now));
+                queryClient.invalidateQueries({
+                    queryKey: ["backend", "stats", agent.symbol],
+                });
+            })
+            .catch(() => undefined);
+    }, [agent, contracts, queryClient, ships]);
+
+    const handleResetBackendCycle = async () => {
+        if (!isBackendConfigured) {
+            setResetError("Backend is not configured.");
+            setResetMessage(null);
+            return;
+        }
+
+        setResetError(null);
+        setResetMessage(null);
+
+        try {
+            const result =
+                await resetBackendCycleMutation.mutateAsync("manual");
+
+            if (typeof window !== "undefined") {
+                localStorage.removeItem(CREDITS_HISTORY_KEY);
+            }
+
+            setResetMessage(
+                `Cycle reset. New cycle started ${formatDateTime(result.activeCycle.startedAt) ?? "now"}.`,
+            );
+        } catch (error) {
+            setResetError(
+                error instanceof Error
+                    ? error.message
+                    : "Failed to reset backend cycle.",
+            );
+        }
+    };
 
     const creditsValues = useMemo(
         () => creditsHistory.map((point) => point.value),
@@ -711,6 +836,68 @@ const Home = () => {
                                         ) ?? "Unknown"
                                     }`}
                                 </p>
+                                {isBackendConfigured && (
+                                    <>
+                                        <p className={styles.statusMetaLine}>
+                                            {`Backend cycle: ${
+                                                backendCycleLoading
+                                                    ? "Loading..."
+                                                    : backendCycleError
+                                                      ? "Unavailable"
+                                                      : (formatDateTime(
+                                                            backendCycle?.startedAt,
+                                                        ) ?? "Unknown")
+                                            }`}
+                                        </p>
+                                        <p className={styles.statusMetaLine}>
+                                            {`Backend stats: ${
+                                                backendStatsLoading
+                                                    ? "Loading..."
+                                                    : backendStatsError
+                                                      ? "Unavailable"
+                                                      : `${
+                                                            backendStats
+                                                                ?.snapshots
+                                                                ?.length ?? 0
+                                                        } snapshots`
+                                            }`}
+                                        </p>
+                                        <div className={styles.statusActions}>
+                                            <button
+                                                type="button"
+                                                className={styles.resetButton}
+                                                onClick={
+                                                    handleResetBackendCycle
+                                                }
+                                                disabled={
+                                                    resetBackendCycleMutation.isPending
+                                                }
+                                            >
+                                                {resetBackendCycleMutation.isPending
+                                                    ? "Resetting..."
+                                                    : "Reset backend cycle"}
+                                            </button>
+                                            {resetError && (
+                                                <p
+                                                    className={
+                                                        styles.statusActionError
+                                                    }
+                                                >
+                                                    {resetError}
+                                                </p>
+                                            )}
+                                            {resetMessage && (
+                                                <p
+                                                    className={
+                                                        styles.statusActionMessage
+                                                    }
+                                                >
+                                                    {resetMessage}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </>
+                                )}
                                 <div className={styles.statusAnnouncements}>
                                     <p className={styles.statusSectionLabel}>
                                         Announcements

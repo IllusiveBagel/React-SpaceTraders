@@ -238,6 +238,186 @@
     color: #fde68a;
 }
 
+.automationBackendPanel {
+    display: grid;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: rgba(15, 23, 42, 0.3);
+    border-left: 3px solid rgba(96, 165, 250, 0.5);
+}
+
+.automationBackendLabel {
+    margin: 0;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+}
+
+.automationBackendStatus {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    padding: 6px 0;
+}
+
+.automationBackendStatusBadge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.automationBackendStatusNone {
+    background: rgba(148, 163, 184, 0.16);
+    color: #cbd5f5;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.automationBackendStatusRunning {
+    background: rgba(34, 197, 94, 0.16);
+    color: #86efac;
+    border: 1px solid rgba(34, 197, 94, 0.35);
+}
+
+.automationBackendStatusPaused {
+    background: rgba(251, 191, 36, 0.18);
+    color: #fde68a;
+    border: 1px solid rgba(251, 191, 36, 0.4);
+}
+
+.automationBackendStatusStopped {
+    background: rgba(148, 163, 184, 0.16);
+    color: #cbd5f5;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.automationBackendButtons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.automationBackendSave,
+.automationBackendStart,
+.automationBackendPause,
+.automationBackendStop {
+    border-radius: 8px;
+    border: 1px solid transparent;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    min-width: 80px;
+    text-align: center;
+}
+
+.automationBackendSave,
+.automationBackendStart {
+    border-color: rgba(96, 165, 250, 0.6);
+    background: rgba(96, 165, 250, 0.15);
+    color: #bfdbfe;
+}
+
+.automationBackendSave:hover:not(:disabled),
+.automationBackendStart:hover:not(:disabled) {
+    background: rgba(96, 165, 250, 0.25);
+    border-color: rgba(96, 165, 250, 0.8);
+}
+
+.automationBackendPause {
+    border-color: rgba(251, 191, 36, 0.6);
+    background: rgba(251, 191, 36, 0.12);
+    color: #fde68a;
+}
+
+.automationBackendPause:hover:not(:disabled) {
+    background: rgba(251, 191, 36, 0.22);
+    border-color: rgba(251, 191, 36, 0.8);
+}
+
+.automationBackendStop {
+    border-color: rgba(248, 113, 113, 0.6);
+    background: rgba(248, 113, 113, 0.12);
+    color: #fca5a5;
+}
+
+.automationBackendStop:hover:not(:disabled) {
+    background: rgba(248, 113, 113, 0.22);
+    border-color: rgba(248, 113, 113, 0.8);
+}
+
+.automationBackendSave:disabled,
+.automationBackendStart:disabled,
+.automationBackendPause:disabled,
+.automationBackendStop:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.automationBackendLog {
+    display: grid;
+    gap: 8px;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: rgba(15, 23, 42, 0.3);
+    font-size: 0.75rem;
+}
+
+.automationBackendLogTitle {
+    margin: 0;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+}
+
+.automationBackendLogList {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 4px;
+    max-height: 120px;
+    overflow-y: auto;
+}
+
+.automationBackendLogItem {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 0.75rem;
+    color: var(--text-primary);
+    padding: 4px 0;
+}
+
+.automationBackendLogMessage {
+    flex: 1;
+    word-break: break-word;
+}
+
+.automationBackendLogTime {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.automationBackendLogEmpty {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+}
+
 .automationLog {
     display: grid;
     gap: 8px;

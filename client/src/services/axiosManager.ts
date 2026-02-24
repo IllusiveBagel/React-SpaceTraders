@@ -17,6 +17,11 @@ const baseUrl =
     runtimeEnv?.VITE_API_BASE_URL ||
     (import.meta.env.VITE_API_BASE_URL as string | undefined);
 
+type CreateApiClientOptions = {
+    getToken?: () => string | undefined;
+    baseURL?: string;
+};
+
 type ApiErrorShape = {
     error?: {
         message?: string;
@@ -50,9 +55,11 @@ const getErrorMessage = (error: unknown) => {
     return { message: "Request failed." };
 };
 
-const createApiClient = (getToken?: () => string | undefined) => {
+const createApiClient = (options?: CreateApiClientOptions) => {
+    const { getToken, baseURL } = options ?? {};
+
     const client: AxiosInstance = axios.create({
-        baseURL: baseUrl,
+        baseURL: baseURL ?? baseUrl,
         headers: {
             "Content-Type": "application/json",
         },
@@ -88,7 +95,10 @@ const createApiClient = (getToken?: () => string | undefined) => {
     return client;
 };
 
-const axiosManager = createApiClient(() => getAgentToken());
+const axiosManager = createApiClient({ getToken: () => getAgentToken() });
+
+const apiBaseUrl = baseUrl;
 
 export { createApiClient, getRuntimeEnv };
 export default axiosManager;
+export { apiBaseUrl };

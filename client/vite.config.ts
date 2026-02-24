@@ -5,6 +5,15 @@ import path from "path";
 // https://vite.dev/config/
 export default defineConfig({
     plugins: [react()],
+    server: {
+        proxy: {
+            "/backend": {
+                target: "http://localhost:3000",
+                changeOrigin: true,
+                rewrite: (requestPath) => requestPath.replace(/^\/backend/, ""),
+            },
+        },
+    },
     resolve: {
         alias: {
             components: path.resolve(__dirname, "src/components"),

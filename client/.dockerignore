@@ -1,9 +1,7 @@
 node_modules
 npm-debug.log
 dist
-.vscode
 .git
-.gitignore
-*.local
+.vscode
 .env
 .env.*
