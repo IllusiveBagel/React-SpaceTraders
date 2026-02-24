@@ -137,7 +137,6 @@ const AutomationProvider = ({ children }: AutomationProviderProps) => {
         [],
     );
 
-
     const stopAutomation = useCallback(
         async (shipSymbol: string) => {
             setState(shipSymbol, "stopped");
@@ -146,7 +145,6 @@ const AutomationProvider = ({ children }: AutomationProviderProps) => {
         },
         [setState],
     );
-
 
     const pauseAutomation = useCallback(
         async (shipSymbol: string) => {
@@ -157,7 +155,6 @@ const AutomationProvider = ({ children }: AutomationProviderProps) => {
         [setState],
     );
 
-
     const resumeAutomation = useCallback(
         async (shipSymbol: string) => {
             setState(shipSymbol, "running");
@@ -167,13 +164,11 @@ const AutomationProvider = ({ children }: AutomationProviderProps) => {
         [setState],
     );
 
-
     const stopAll = useCallback(async () => {
         setRunState({});
         // Notify backend to stop all automation
         await axiosManager.post(`/automation/stopAll`);
     }, []);
-
 
     const startAutomation = useCallback(
         async (shipSymbol: string) => {
@@ -183,7 +178,6 @@ const AutomationProvider = ({ children }: AutomationProviderProps) => {
         },
         [setState],
     );
-
 
     // Status updates should now be fetched from the backend.
     // recordStatus is retained for UI state, but backend should be source of truth.
@@ -214,7 +208,6 @@ const AutomationProvider = ({ children }: AutomationProviderProps) => {
         },
         [],
     );
-
 
     // useEffect for local automation intervals is removed. Backend is responsible for automation execution.
 
