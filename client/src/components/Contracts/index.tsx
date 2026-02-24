@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import useGetContracts from "hooks/contracts/useGetContracts";
 import useGetShips from "hooks/fleet/useGetShips";
 import useNegotiateContract from "hooks/contracts/useNegotiateContract";
-import ContractCard from "components/Home/ContractCard";
+import ContractCard from "components/Contracts/ContractCard";
 
 import styles from "./Contracts.module.css";
 
@@ -88,7 +88,7 @@ const Contracts = () => {
     }
 
     return (
-        <div className={styles.contracts}>
+        <>
             <div className={styles.header}>
                 <div>
                     <h1 className={styles.title}>Contracts</h1>
@@ -181,7 +181,7 @@ const Contracts = () => {
             ) : (
                 <p className={styles.empty}>No open contracts found.</p>
             )}
-        </div>
+        </>
     );
 };
 

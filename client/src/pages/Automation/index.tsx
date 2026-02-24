@@ -529,60 +529,6 @@ const AutomationCard = ({
                 </div>
             )}
 
-            <div className={styles.automationFooter}>
-                <div className={styles.automationStatusText}>
-                    <p>
-                        {status?.lastError
-                            ? `Error: ${status.lastError}`
-                            : status?.lastAction || "No actions yet."}
-                    </p>
-                    {status?.lastUpdated && (
-                        <span>
-                            {new Date(status.lastUpdated).toLocaleTimeString()}
-                        </span>
-                    )}
-                </div>
-                <div className={styles.automationButtons}>
-                    {isRunning && (
-                        <button
-                            type="button"
-                            className={styles.automationPause}
-                            onClick={onPause}
-                        >
-                            Pause
-                        </button>
-                    )}
-                    {isPaused && (
-                        <button
-                            type="button"
-                            className={styles.automationStart}
-                            onClick={onResume}
-                        >
-                            Resume
-                        </button>
-                    )}
-                    {!isRunning && !isPaused && (
-                        <button
-                            type="button"
-                            className={styles.automationStart}
-                            onClick={onStart}
-                            disabled={!canStart}
-                        >
-                            Start
-                        </button>
-                    )}
-                    {(isRunning || isPaused) && (
-                        <button
-                            type="button"
-                            className={styles.automationStop}
-                            onClick={onStop}
-                        >
-                            Stop
-                        </button>
-                    )}
-                </div>
-            </div>
-
             {isBackendConfigured && (
                 <div className={styles.automationBackendPanel}>
                     <div
@@ -732,42 +678,6 @@ const AutomationCard = ({
                     )}
                 </div>
             )}
-
-            <div className={styles.automationLog}>
-                <p className={styles.automationLogTitle}>Recent actions</p>
-                {hasActivity ? (
-                    <ul className={styles.automationLogList}>
-                        {recentActions.map((entry, index) => (
-                            <li
-                                key={`${ship.symbol}-log-${index}`}
-                                className={styles.automationLogItem}
-                            >
-                                <span
-                                    className={
-                                        entry.type === "error"
-                                            ? styles.automationLogError
-                                            : styles.automationLogAction
-                                    }
-                                >
-                                    {entry.message}
-                                </span>
-                                <span className={styles.automationLogTime}>
-                                    {new Date(
-                                        entry.timestamp,
-                                    ).toLocaleTimeString()}
-                                    {formatLogDuration(entry.durationMs)
-                                        ? ` • ${formatLogDuration(entry.durationMs)}`
-                                        : ""}
-                                </span>
-                            </li>
-                        ))}
-                    </ul>
-                ) : (
-                    <p className={styles.automationLogEmpty}>
-                        No recent actions yet.
-                    </p>
-                )}
-            </div>
         </article>
     );
 };
@@ -850,6 +760,14 @@ const Automation = () => {
                 <div>
                     <p className={styles.subtitle}>
                         Assign mining routes and run multiple ships.
+                        <br />
+                        <span style={{ color: "#888", fontSize: "0.95em" }}>
+                            All automation logic is now handled by the backend.
+                            This page allows you to configure and manage
+                            automation jobs for your ships. Actions such as
+                            start, pause, and stop will communicate with the
+                            backend.
+                        </span>
                     </p>
                 </div>
                 <button
