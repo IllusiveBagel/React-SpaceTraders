@@ -81,12 +81,6 @@ const getTemplateDefaults = (templateId: string, ship: Ship) => {
     }
 };
 
-const formatLogDuration = (durationMs?: number) => {
-    if (typeof durationMs !== "number") return "";
-    if (durationMs < 1000) return `${durationMs}ms`;
-    return `${(durationMs / 1000).toFixed(1)}s`;
-};
-
 const formatBackoff = (iso?: string) => {
     if (!iso) return null;
     const parsed = new Date(iso);
@@ -108,10 +102,6 @@ const AutomationCard = ({
     isBackendRunning,
     isBackendPending,
     onUpdate,
-    onStart,
-    onPause,
-    onResume,
-    onStop,
     onBackendSave,
     onBackendStart,
     onBackendPause,
@@ -268,9 +258,7 @@ const AutomationCard = ({
             validationMessages.push("Fuel threshold must be 1-100%.");
         }
     }
-    const canStart = validationMessages.length === 0;
-    const recentActions = status?.recentActions ?? [];
-    const hasActivity = recentActions.length > 0;
+
     const backoffLabel = formatBackoff(status?.backoffUntil);
     const fuelCapacity = ship.fuel.capacity || 0;
     const lowFuelWithoutRefuel =
