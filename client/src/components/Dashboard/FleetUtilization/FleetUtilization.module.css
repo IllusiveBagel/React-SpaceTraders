@@ -1,0 +1,43 @@
+.stackedBar {
+    width: 100%;
+    height: 14px;
+    border-radius: 999px;
+    overflow: hidden;
+    display: flex;
+    background: rgba(15, 23, 42, 0.4);
+}
+
+.segment {
+    height: 100%;
+    display: block;
+}
+
+.segmentTransit {
+    background: #38bdf8;
+}
+
+.segmentDocked {
+    background: #fbbf24;
+}
+
+.segmentOrbit {
+    background: #4ade80;
+}
+
+.segmentOther {
+    background: #c084fc;
+}
+
+.legend {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 6px 12px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.emptyState {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}

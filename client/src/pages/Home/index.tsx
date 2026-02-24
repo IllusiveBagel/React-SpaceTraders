@@ -1,17 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 
+import { formatNumber } from "helpers/formatNumber";
+
+import { appendBackendStatsSnapshot } from "services/backendMissionControl";
 import { isBackendConfigured } from "services/backendAxios";
+
 import useGetBackendCycle from "hooks/backend/useGetBackendCycle";
 import useGetBackendStats from "hooks/backend/useGetBackendStats";
-import useResetBackendCycle from "hooks/backend/useResetBackendCycle";
-import { appendBackendStatsSnapshot } from "services/backendMissionControl";
 import useGetAgent from "hooks/agent/useGetAgent";
 import useGetContracts from "hooks/contracts/useGetContracts";
 import useGetShips from "hooks/fleet/useGetShips";
 import useGetStatus from "hooks/status/useGetStatus";
+
 import { usePageTitle } from "components/Layout/PageTitleContext";
+import CreditsOverTime from "components/Dashboard/CreditsOverTime";
+import ServerStatus from "components/Dashboard/ServerStatus";
+import FleetUtilization from "components/Dashboard/FleetUtilization";
+import ServerSnapshot from "components/Dashboard/ServerSnapshot";
+import ContractProgress from "components/Dashboard/ContractProgress";
 
 import styles from "./Home.module.css";
 
@@ -86,42 +93,6 @@ const useCreditsHistory = (credits?: number) => {
     return history;
 };
 
-const buildSparklinePath = (
-    values: number[],
-    width = 260,
-    height = 90,
-    padding = 8,
-) => {
-    if (values.length === 0) return "";
-
-    const min = Math.min(...values);
-    const max = Math.max(...values);
-    const range = max - min || 1;
-    const span = values.length - 1 || 1;
-
-    return values
-        .map((value, index) => {
-            const x = padding + (index / span) * (width - padding * 2);
-            const y =
-                padding + (1 - (value - min) / range) * (height - padding * 2);
-            return `${index === 0 ? "M" : "L"}${x} ${y}`;
-        })
-        .join(" ");
-};
-
-const formatNumber = (value: number) =>
-    new Intl.NumberFormat("en-US", {
-        notation: "compact",
-        maximumFractionDigits: 1,
-    }).format(value);
-
-const formatDateTime = (value?: string) => {
-    if (!value) return undefined;
-    const parsed = new Date(value);
-    if (Number.isNaN(parsed.getTime())) return value;
-    return parsed.toLocaleString();
-};
-
 const getStatusTone = (status?: string, hasError?: boolean) => {
     if (hasError) return "error";
     const normalized = status?.toLowerCase() ?? "";
@@ -146,22 +117,11 @@ const Home = () => {
         isLoading: serverStatusLoading,
         isError: serverStatusError,
     } = useGetStatus();
-    const {
-        data: backendCycle,
-        isLoading: backendCycleLoading,
-        isError: backendCycleError,
-    } = useGetBackendCycle();
-    const {
-        data: backendStats,
-        isLoading: backendStatsLoading,
-        isError: backendStatsError,
-    } = useGetBackendStats({
+    const { data: backendCycle } = useGetBackendCycle();
+    const { data: backendStats } = useGetBackendStats({
         agentSymbol: agent?.symbol,
         cycleId: backendCycle?.id,
     });
-    const resetBackendCycleMutation = useResetBackendCycle();
-    const [resetMessage, setResetMessage] = useState<string | null>(null);
-    const [resetError, setResetError] = useState<string | null>(null);
 
     const localCreditsHistory = useCreditsHistory(agent?.credits);
     const backendCreditsHistory = useMemo(() => {
@@ -236,46 +196,6 @@ const Home = () => {
             .catch(() => undefined);
     }, [agent, contracts, queryClient, ships]);
 
-    const handleResetBackendCycle = async () => {
-        if (!isBackendConfigured) {
-            setResetError("Backend is not configured.");
-            setResetMessage(null);
-            return;
-        }
-
-        setResetError(null);
-        setResetMessage(null);
-
-        try {
-            const result =
-                await resetBackendCycleMutation.mutateAsync("manual");
-
-            if (typeof window !== "undefined") {
-                localStorage.removeItem(CREDITS_HISTORY_KEY);
-            }
-
-            setResetMessage(
-                `Cycle reset. New cycle started ${formatDateTime(result.activeCycle.startedAt) ?? "now"}.`,
-            );
-        } catch (error) {
-            setResetError(
-                error instanceof Error
-                    ? error.message
-                    : "Failed to reset backend cycle.",
-            );
-        }
-    };
-
-    const creditsValues = useMemo(
-        () => creditsHistory.map((point) => point.value),
-        [creditsHistory],
-    );
-
-    const creditsDelta = useMemo(() => {
-        if (creditsValues.length < 2) return 0;
-        return creditsValues[creditsValues.length - 1] - creditsValues[0];
-    }, [creditsValues]);
-
     const creditsPerHour = useMemo(() => {
         if (creditsHistory.length < 2) return undefined;
         const first = creditsHistory[0];
@@ -284,30 +204,6 @@ const Home = () => {
         if (hours <= 0) return undefined;
         return (last.value - first.value) / hours;
     }, [creditsHistory]);
-
-    const sparklinePath = useMemo(
-        () => buildSparklinePath(creditsValues),
-        [creditsValues],
-    );
-
-    const fleetUtilization = useMemo(() => {
-        const counts = {
-            inTransit: 0,
-            docked: 0,
-            orbit: 0,
-            other: 0,
-        };
-
-        (ships ?? []).forEach((ship) => {
-            const status = ship.nav.status?.toUpperCase();
-            if (status === "IN_TRANSIT") counts.inTransit += 1;
-            else if (status === "DOCKED") counts.docked += 1;
-            else if (status === "IN_ORBIT") counts.orbit += 1;
-            else counts.other += 1;
-        });
-
-        return counts;
-    }, [ships]);
 
     const totalShips = ships?.length ?? 0;
 
@@ -339,55 +235,6 @@ const Home = () => {
             })
             .sort((a, b) => a.remaining - b.remaining);
     }, [contracts]);
-
-    const lowFuelShips = useMemo(() => {
-        return (ships ?? []).filter((ship) => {
-            const capacity = ship.fuel.capacity || 0;
-            if (capacity === 0) return false;
-            return ship.fuel.current / capacity <= 0.2;
-        });
-    }, [ships]);
-
-    const shipsOnCooldown = useMemo(() => {
-        return (ships ?? []).filter((ship) =>
-            ship.cooldown?.remainingSeconds
-                ? ship.cooldown.remainingSeconds > 0
-                : false,
-        );
-    }, [ships]);
-
-    const expiringContracts = useMemo(() => {
-        const now = Date.now();
-        const threshold = 24 * 60 * 60 * 1000;
-
-        return (contracts ?? []).filter((contract) => {
-            if (!contract.accepted || contract.fulfilled) return false;
-            const deadline = new Date(contract.terms.deadline).getTime();
-            if (Number.isNaN(deadline)) return false;
-            const remaining = deadline - now;
-            return remaining > 0 && remaining <= threshold;
-        });
-    }, [contracts]);
-
-    const topCommodities = useMemo(() => {
-        const totals = new Map<string, number>();
-        (ships ?? []).forEach((ship) => {
-            ship.cargo.inventory.forEach((item) => {
-                totals.set(
-                    item.symbol,
-                    (totals.get(item.symbol) ?? 0) + item.units,
-                );
-            });
-        });
-
-        return Array.from(totals.entries())
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 5)
-            .map(([symbol, units]) => ({ symbol, units }));
-    }, [ships]);
-
-    const maxCommodityUnits =
-        topCommodities.reduce((max, item) => Math.max(max, item.units), 0) || 1;
 
     const statusTone = useMemo(
         () => getStatusTone(serverStatus?.status, serverStatusError),
@@ -421,18 +268,6 @@ const Home = () => {
         if (statusTone === "error") return styles.statusDotError;
         return styles.statusDotUnknown;
     }, [statusTone]);
-
-    const statusStats = serverStatus?.stats;
-    const statusStatItems = useMemo(
-        () => [
-            { label: "Accounts", value: statusStats?.accounts },
-            { label: "Agents", value: statusStats?.agents },
-            { label: "Ships", value: statusStats?.ships },
-            { label: "Systems", value: statusStats?.systems },
-            { label: "Waypoints", value: statusStats?.waypoints },
-        ],
-        [statusStats],
-    );
 
     return (
         <div className={styles.home}>
@@ -484,506 +319,17 @@ const Home = () => {
             </header>
 
             <section className={styles.grid}>
-                <article className={`${styles.card} ${styles.cardWide}`}>
-                    <div className={styles.cardHeader}>
-                        <div>
-                            <h2 className={styles.cardTitle}>
-                                Credits over time
-                            </h2>
-                            <p className={styles.cardSub}>
-                                Last saved snapshots
-                            </p>
-                        </div>
-                        <div
-                            className={`${
-                                styles.trend
-                            } ${creditsDelta >= 0 ? styles.trendUp : styles.trendDown}`}
-                        >
-                            {creditsDelta >= 0 ? "+" : ""}
-                            {formatNumber(creditsDelta)}
-                        </div>
-                    </div>
-                    <div className={styles.cardBody}>
-                        {creditsValues.length > 1 ? (
-                            <svg
-                                className={styles.sparkline}
-                                viewBox="0 0 260 90"
-                                role="img"
-                                aria-label="Credits sparkline"
-                            >
-                                <path
-                                    className={styles.sparklinePath}
-                                    d={sparklinePath}
-                                />
-                            </svg>
-                        ) : (
-                            <p className={styles.emptyState}>
-                                Collecting your first data points.
-                            </p>
-                        )}
-                    </div>
-                </article>
-
-                <article className={styles.card}>
-                    <div className={styles.cardHeader}>
-                        <div>
-                            <h2 className={styles.cardTitle}>
-                                Fleet utilization
-                            </h2>
-                            <p className={styles.cardSub}>
-                                Current ship statuses
-                            </p>
-                        </div>
-                    </div>
-                    <div className={styles.cardBody}>
-                        {totalShips > 0 ? (
-                            <>
-                                <div className={styles.stackedBar}>
-                                    <span
-                                        className={`${styles.segment} ${styles.segmentTransit}`}
-                                        style={{
-                                            width: `${
-                                                (fleetUtilization.inTransit /
-                                                    totalShips) *
-                                                100
-                                            }%`,
-                                        }}
-                                    />
-                                    <span
-                                        className={`${styles.segment} ${styles.segmentDocked}`}
-                                        style={{
-                                            width: `${
-                                                (fleetUtilization.docked /
-                                                    totalShips) *
-                                                100
-                                            }%`,
-                                        }}
-                                    />
-                                    <span
-                                        className={`${styles.segment} ${styles.segmentOrbit}`}
-                                        style={{
-                                            width: `${
-                                                (fleetUtilization.orbit /
-                                                    totalShips) *
-                                                100
-                                            }%`,
-                                        }}
-                                    />
-                                    <span
-                                        className={`${styles.segment} ${styles.segmentOther}`}
-                                        style={{
-                                            width: `${
-                                                (fleetUtilization.other /
-                                                    totalShips) *
-                                                100
-                                            }%`,
-                                        }}
-                                    />
-                                </div>
-                                <div className={styles.legend}>
-                                    <span>
-                                        In transit: {fleetUtilization.inTransit}
-                                    </span>
-                                    <span>
-                                        Docked: {fleetUtilization.docked}
-                                    </span>
-                                    <span>
-                                        In orbit: {fleetUtilization.orbit}
-                                    </span>
-                                    <span>Other: {fleetUtilization.other}</span>
-                                </div>
-                            </>
-                        ) : (
-                            <p className={styles.emptyState}>
-                                No ships discovered yet.
-                            </p>
-                        )}
-                    </div>
-                </article>
-
-                <article className={styles.card}>
-                    <div className={styles.cardHeader}>
-                        <div>
-                            <h2 className={styles.cardTitle}>Ops alerts</h2>
-                            <p className={styles.cardSub}>
-                                Items needing attention
-                            </p>
-                        </div>
-                    </div>
-                    <div className={styles.cardBody}>
-                        <div className={styles.alertList}>
-                            <div className={styles.alertItem}>
-                                <span className={styles.alertLabel}>
-                                    Low fuel ships
-                                </span>
-                                <span className={styles.alertValue}>
-                                    {lowFuelShips.length}
-                                </span>
-                                <span className={styles.alertDetail}>
-                                    {lowFuelShips.length > 0
-                                        ? lowFuelShips
-                                              .slice(0, 3)
-                                              .map((ship) => ship.symbol)
-                                              .join(", ")
-                                        : "All ships fueled"}
-                                </span>
-                            </div>
-                            <div className={styles.alertItem}>
-                                <span className={styles.alertLabel}>
-                                    Cooldowns active
-                                </span>
-                                <span className={styles.alertValue}>
-                                    {shipsOnCooldown.length}
-                                </span>
-                                <span className={styles.alertDetail}>
-                                    {shipsOnCooldown.length > 0
-                                        ? shipsOnCooldown
-                                              .slice(0, 3)
-                                              .map((ship) => ship.symbol)
-                                              .join(", ")
-                                        : "No cooldowns"}
-                                </span>
-                            </div>
-                            <div className={styles.alertItem}>
-                                <span className={styles.alertLabel}>
-                                    Contracts due soon
-                                </span>
-                                <span className={styles.alertValue}>
-                                    {expiringContracts.length}
-                                </span>
-                                <span className={styles.alertDetail}>
-                                    {expiringContracts.length > 0
-                                        ? expiringContracts
-                                              .slice(0, 2)
-                                              .map(
-                                                  (contract) =>
-                                                      `${contract.factionSymbol} ${contract.type}`,
-                                              )
-                                              .join(", ")
-                                        : "No deadlines in 24h"}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </article>
-
-                <article className={styles.card}>
-                    <div className={styles.cardHeader}>
-                        <div>
-                            <h2 className={styles.cardTitle}>
-                                Contract progress
-                            </h2>
-                            <p className={styles.cardSub}>
-                                Remaining units by contract
-                            </p>
-                        </div>
-                    </div>
-                    <div className={styles.cardBody}>
-                        {activeContractProgress.length > 0 ? (
-                            <div className={styles.progressList}>
-                                {activeContractProgress.map((contract) => (
-                                    <div
-                                        key={contract.id}
-                                        className={styles.progressItem}
-                                    >
-                                        <div className={styles.progressMeta}>
-                                            <span>{contract.label}</span>
-                                            <span>
-                                                {Math.round(
-                                                    contract.progress * 100,
-                                                )}
-                                                %
-                                            </span>
-                                        </div>
-                                        <div className={styles.progressTrack}>
-                                            <span
-                                                className={styles.progressFill}
-                                                style={{
-                                                    width: `${Math.round(
-                                                        contract.progress * 100,
-                                                    )}%`,
-                                                }}
-                                            />
-                                        </div>
-                                        <p className={styles.progressFoot}>
-                                            {contract.remaining} units remaining
-                                        </p>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <p className={styles.emptyState}>
-                                No active contracts yet.
-                            </p>
-                        )}
-                    </div>
-                </article>
-
-                <article className={styles.card}>
-                    <div className={styles.cardHeader}>
-                        <div>
-                            <h2 className={styles.cardTitle}>Quick actions</h2>
-                            <p className={styles.cardSub}>Common next steps</p>
-                        </div>
-                    </div>
-                    <div className={styles.cardBody}>
-                        <div className={styles.quickActions}>
-                            <Link className={styles.quickAction} to="/fleet">
-                                Manage fleet
-                            </Link>
-                            <Link
-                                className={styles.quickAction}
-                                to="/contracts"
-                            >
-                                Review contracts
-                            </Link>
-                            <Link className={styles.quickAction} to="/market">
-                                Check markets
-                            </Link>
-                            <Link className={styles.quickAction} to="/shipyard">
-                                Visit shipyard
-                            </Link>
-                            <Link className={styles.quickAction} to="/map">
-                                Open map
-                            </Link>
-                        </div>
-                    </div>
-                </article>
-
-                <article className={styles.card}>
-                    <div className={styles.cardHeader}>
-                        <div>
-                            <h2 className={styles.cardTitle}>
-                                Top commodities (cargo units)
-                            </h2>
-                            <p className={styles.cardSub}>
-                                Profit tracking placeholder
-                            </p>
-                        </div>
-                    </div>
-                    <div className={styles.cardBody}>
-                        {topCommodities.length > 0 ? (
-                            <div className={styles.barList}>
-                                {topCommodities.map((item) => (
-                                    <div
-                                        key={item.symbol}
-                                        className={styles.barRow}
-                                    >
-                                        <div className={styles.barLabel}>
-                                            {item.symbol}
-                                        </div>
-                                        <div className={styles.barTrack}>
-                                            <span
-                                                className={styles.barFill}
-                                                style={{
-                                                    width: `${
-                                                        (item.units /
-                                                            maxCommodityUnits) *
-                                                        100
-                                                    }%`,
-                                                }}
-                                            />
-                                        </div>
-                                        <div className={styles.barValue}>
-                                            {item.units}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <p className={styles.emptyState}>
-                                No cargo data yet.
-                            </p>
-                        )}
-                    </div>
-                </article>
-
-                <article className={styles.card}>
-                    <div className={styles.cardHeader}>
-                        <div>
-                            <h2 className={styles.cardTitle}>Server status</h2>
-                            <p className={styles.cardSub}>
-                                Next reset and recent updates
-                            </p>
-                        </div>
-                    </div>
-                    <div className={styles.cardBody}>
-                        {serverStatusLoading ? (
-                            <p className={styles.emptyState}>
-                                Loading server status...
-                            </p>
-                        ) : serverStatusError ? (
-                            <p className={styles.emptyState}>
-                                Unable to load server status.
-                            </p>
-                        ) : (
-                            <>
-                                <p className={styles.statusMetaLine}>
-                                    {`Next reset: ${
-                                        formatDateTime(
-                                            serverStatus?.serverResets?.next,
-                                        ) ?? "Unknown"
-                                    }`}
-                                    {serverStatus?.serverResets?.frequency
-                                        ? ` | ${serverStatus.serverResets.frequency}`
-                                        : ""}
-                                </p>
-                                <p className={styles.statusMetaLine}>
-                                    {`Last market update: ${
-                                        formatDateTime(
-                                            serverStatus?.health
-                                                ?.lastMarketUpdate,
-                                        ) ?? "Unknown"
-                                    }`}
-                                </p>
-                                {isBackendConfigured && (
-                                    <>
-                                        <p className={styles.statusMetaLine}>
-                                            {`Backend cycle: ${
-                                                backendCycleLoading
-                                                    ? "Loading..."
-                                                    : backendCycleError
-                                                      ? "Unavailable"
-                                                      : (formatDateTime(
-                                                            backendCycle?.startedAt,
-                                                        ) ?? "Unknown")
-                                            }`}
-                                        </p>
-                                        <p className={styles.statusMetaLine}>
-                                            {`Backend stats: ${
-                                                backendStatsLoading
-                                                    ? "Loading..."
-                                                    : backendStatsError
-                                                      ? "Unavailable"
-                                                      : `${
-                                                            backendStats
-                                                                ?.snapshots
-                                                                ?.length ?? 0
-                                                        } snapshots`
-                                            }`}
-                                        </p>
-                                        <div className={styles.statusActions}>
-                                            <button
-                                                type="button"
-                                                className={styles.resetButton}
-                                                onClick={
-                                                    handleResetBackendCycle
-                                                }
-                                                disabled={
-                                                    resetBackendCycleMutation.isPending
-                                                }
-                                            >
-                                                {resetBackendCycleMutation.isPending
-                                                    ? "Resetting..."
-                                                    : "Reset backend cycle"}
-                                            </button>
-                                            {resetError && (
-                                                <p
-                                                    className={
-                                                        styles.statusActionError
-                                                    }
-                                                >
-                                                    {resetError}
-                                                </p>
-                                            )}
-                                            {resetMessage && (
-                                                <p
-                                                    className={
-                                                        styles.statusActionMessage
-                                                    }
-                                                >
-                                                    {resetMessage}
-                                                </p>
-                                            )}
-                                        </div>
-                                    </>
-                                )}
-                                <div className={styles.statusAnnouncements}>
-                                    <p className={styles.statusSectionLabel}>
-                                        Announcements
-                                    </p>
-                                    {serverStatus?.announcements?.length ? (
-                                        <ul className={styles.statusList}>
-                                            {serverStatus.announcements.map(
-                                                (item, index) => (
-                                                    <li
-                                                        key={`${item.title ?? "announcement"}-${index}`}
-                                                        className={
-                                                            styles.statusListItem
-                                                        }
-                                                    >
-                                                        <strong>
-                                                            {item.title ??
-                                                                "Untitled"}
-                                                        </strong>
-                                                        <span
-                                                            className={
-                                                                styles.statusListBody
-                                                            }
-                                                        >
-                                                            {item.body ??
-                                                                "No details provided."}
-                                                        </span>
-                                                    </li>
-                                                ),
-                                            )}
-                                        </ul>
-                                    ) : (
-                                        <p className={styles.statusEmpty}>
-                                            No announcements.
-                                        </p>
-                                    )}
-                                </div>
-                            </>
-                        )}
-                    </div>
-                </article>
-
-                <article className={styles.card}>
-                    <div className={styles.cardHeader}>
-                        <div>
-                            <h2 className={styles.cardTitle}>
-                                Server snapshot
-                            </h2>
-                            <p className={styles.cardSub}>
-                                Accounts, agents, ships, and systems
-                            </p>
-                        </div>
-                    </div>
-                    <div className={styles.cardBody}>
-                        {serverStatusLoading ? (
-                            <p className={styles.emptyState}>
-                                Loading snapshot...
-                            </p>
-                        ) : serverStatusError ? (
-                            <p className={styles.emptyState}>
-                                Snapshot unavailable.
-                            </p>
-                        ) : (
-                            <div className={styles.statusStatsGrid}>
-                                {statusStatItems.map((item) => (
-                                    <div
-                                        key={item.label}
-                                        className={styles.statusStat}
-                                    >
-                                        <span
-                                            className={styles.statusStatLabel}
-                                        >
-                                            {item.label}
-                                        </span>
-                                        <span
-                                            className={styles.statusStatValue}
-                                        >
-                                            {typeof item.value === "number"
-                                                ? formatNumber(item.value)
-                                                : "--"}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                </article>
+                <CreditsOverTime creditsHistory={creditsHistory} />
+                <FleetUtilization />
+                <ContractProgress
+                    activeContractProgress={activeContractProgress}
+                />
+                <ServerStatus agent={agent ?? { symbol: "" }} />
+                <ServerSnapshot
+                    serverStatus={serverStatus}
+                    serverStatusLoading={serverStatusLoading}
+                    serverStatusError={serverStatusError}
+                />
             </section>
         </div>
     );

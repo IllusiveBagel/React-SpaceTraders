@@ -101,234 +101,16 @@
     color: var(--text-secondary);
 }
 
-.statusMetaLine {
-    margin: 0;
-    font-size: 0.78rem;
-    color: var(--text-secondary);
-}
-
-.statusActions {
-    display: grid;
-    gap: 8px;
-    padding-top: 8px;
-}
-
-.resetButton {
-    border: 1px solid rgba(96, 165, 250, 0.6);
-    background: rgba(96, 165, 250, 0.15);
-    color: #bfdbfe;
-    padding: 8px 12px;
-    border-radius: 999px;
-    font-weight: 600;
-    width: fit-content;
-}
-
-.resetButton:disabled {
-    opacity: 0.6;
-}
-
-.statusActionError {
-    margin: 0;
-    color: #fca5a5;
-    font-size: 0.8rem;
-}
-
-.statusActionMessage {
-    margin: 0;
-    color: #bae6fd;
-    font-size: 0.8rem;
-}
-
-.statusAnnouncements {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding-top: 10px;
-    border-top: 1px solid var(--border);
-}
-
-.statusSectionLabel {
-    margin: 0;
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--text-secondary);
-}
-
-.statusList {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    max-height: 160px;
-    overflow-y: auto;
-    padding-right: 6px;
-}
-
-.statusListItem {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    font-size: 0.85rem;
-    color: var(--text-primary);
-    padding-bottom: 6px;
-    border-bottom: 1px solid rgba(148, 163, 184, 0.2);
-}
-
-.statusListItem:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
-}
-
-.statusListBody {
-    font-size: 0.78rem;
-    color: var(--text-secondary);
-}
-
 .statusEmpty {
     margin: 0;
     font-size: 0.85rem;
     color: var(--text-secondary);
 }
 
-.statusStatsGrid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 10px;
-}
-
-.statusStat {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.statusStatLabel {
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-secondary);
-}
-
-.statusStatValue {
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
 .grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 20px;
-}
-
-.card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    box-shadow: 0 18px 40px rgba(2, 6, 23, 0.45);
-}
-
-.cardWide {
-    grid-column: span 2;
-}
-
-.cardHeader {
-    display: flex;
-    justify-content: space-between;
-    gap: 16px;
-    align-items: flex-start;
-}
-
-.cardTitle {
-    margin: 0;
-    font-size: 1.1rem;
-    color: var(--text-primary);
-}
-
-.cardSub {
-    margin: 6px 0 0 0;
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-}
-
-.trend {
-    padding: 6px 10px;
-    border-radius: 999px;
-    font-weight: 600;
-    font-size: 0.85rem;
-    background: rgba(15, 23, 42, 0.45);
-}
-
-.trendUp {
-    color: #4ade80;
-}
-
-.trendDown {
-    color: #f87171;
-}
-
-.cardBody {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.sparkline {
-    width: 100%;
-    height: 120px;
-}
-
-.sparklinePath {
-    fill: none;
-    stroke: #38bdf8;
-    stroke-width: 3;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-}
-
-.stackedBar {
-    width: 100%;
-    height: 14px;
-    border-radius: 999px;
-    overflow: hidden;
-    display: flex;
-    background: rgba(15, 23, 42, 0.4);
-}
-
-.segment {
-    height: 100%;
-    display: block;
-}
-
-.segmentTransit {
-    background: #38bdf8;
-}
-
-.segmentDocked {
-    background: #fbbf24;
-}
-
-.segmentOrbit {
-    background: #4ade80;
-}
-
-.segmentOther {
-    background: #c084fc;
-}
-
-.legend {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 6px 12px;
-    font-size: 0.8rem;
-    color: var(--text-secondary);
 }
 
 .alertList {
@@ -361,44 +143,6 @@
 .alertDetail {
     grid-column: 1 / -1;
     font-size: 0.8rem;
-    color: var(--text-secondary);
-}
-
-.progressList {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.progressItem {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.progressMeta {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.85rem;
-    color: var(--text-primary);
-}
-
-.progressTrack {
-    height: 8px;
-    border-radius: 999px;
-    background: rgba(15, 23, 42, 0.4);
-    overflow: hidden;
-}
-
-.progressFill {
-    height: 100%;
-    display: block;
-    background: #38bdf8;
-}
-
-.progressFoot {
-    margin: 0;
-    font-size: 0.78rem;
     color: var(--text-secondary);
 }
 
@@ -473,10 +217,6 @@
 
     .title {
         font-size: 1.6rem;
-    }
-
-    .cardWide {
-        grid-column: span 1;
     }
 
     .barRow {

@@ -1,0 +1,34 @@
+.trend {
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    background: rgba(15, 23, 42, 0.45);
+}
+
+.trendUp {
+    color: #4ade80;
+}
+
+.trendDown {
+    color: #f87171;
+}
+
+.sparkline {
+    width: 100%;
+    height: 120px;
+}
+
+.sparklinePath {
+    fill: none;
+    stroke: #38bdf8;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.emptyState {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
