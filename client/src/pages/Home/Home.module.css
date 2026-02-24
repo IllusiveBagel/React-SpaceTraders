@@ -101,113 +101,10 @@
     color: var(--text-secondary);
 }
 
-.statusEmpty {
-    margin: 0;
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-}
-
 .grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 20px;
-}
-
-.alertList {
-    display: grid;
-    gap: 14px;
-}
-
-.alertItem {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 6px 12px;
-    padding: 12px 14px;
-    border-radius: 12px;
-    background: var(--surface-soft);
-    border: 1px solid var(--border);
-}
-
-.alertLabel {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.alertValue {
-    justify-self: end;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.alertDetail {
-    grid-column: 1 / -1;
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-}
-
-.barList {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.barRow {
-    display: grid;
-    grid-template-columns: 1fr 2.5fr auto;
-    align-items: center;
-    gap: 10px;
-    font-size: 0.85rem;
-}
-
-.barLabel {
-    color: var(--text-primary);
-    font-weight: 500;
-}
-
-.barTrack {
-    height: 8px;
-    border-radius: 999px;
-    background: rgba(15, 23, 42, 0.4);
-    overflow: hidden;
-}
-
-.barFill {
-    height: 100%;
-    display: block;
-    background: #f472b6;
-}
-
-.barValue {
-    color: var(--text-secondary);
-    font-size: 0.78rem;
-}
-
-.quickActions {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 10px;
-}
-
-.quickAction {
-    border: 1px solid var(--border);
-    background: var(--surface-soft);
-    color: var(--text-primary);
-    padding: 10px 12px;
-    border-radius: 12px;
-    font-weight: 600;
-    text-align: center;
-}
-
-.quickAction:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-}
-
-.emptyState {
-    margin: 0;
-    font-size: 0.9rem;
-    color: var(--text-secondary);
 }
 
 @media (max-width: 900px) {
@@ -217,9 +114,5 @@
 
     .title {
         font-size: 1.6rem;
-    }
-
-    .barRow {
-        grid-template-columns: 1fr 2fr auto;
     }
 }
