@@ -29,7 +29,7 @@ import type {
 
 import styles from "./Automation.module.css";
 import { usePageTitle } from "components/Layout/PageTitleContext";
-import ProgressBar from "components/Home/ProgressBar";
+import ProgressBar from "components/Common/ProgressBar";
 import { formatDuration } from "helpers/fleetFormatters";
 
 type AutomationCardProps = {

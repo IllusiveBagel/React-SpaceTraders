@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { Contract } from "types/contract";
 import type { Ship } from "types/fleet";
 import styles from "./ContractCard.module.css";
-import ProgressBar from "components/Home/ProgressBar";
+import ProgressBar from "components/Common/ProgressBar";
 import useGetShips from "hooks/fleet/useGetShips";
 import useContractActions from "hooks/contracts/useContractActions";
 import { formatDateTime } from "helpers/fleetFormatters";

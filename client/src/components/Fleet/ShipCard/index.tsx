@@ -4,7 +4,7 @@ import type { Ship } from "types/fleet";
 
 import styles from "./ShipCard.module.css";
 import { formatDuration, formatPercent } from "helpers/fleetFormatters";
-import ProgressBar from "components/Home/ProgressBar";
+import ProgressBar from "components/Common/ProgressBar";
 import useTransitProgress from "hooks/fleet/useTransitProgress";
 
 type ShipCardProps = {

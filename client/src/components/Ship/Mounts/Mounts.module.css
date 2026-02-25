@@ -1,0 +1,27 @@
+.mountsGrid {
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    background: var(--surface-soft);
+    display: grid;
+    gap: 16px;
+}
+
+.detailText {
+    margin: 0 0 6px;
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+    line-height: 1.35;
+}
+
+@media (min-width: 860px) {
+    .mountsGrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1260px) {
+    .mountsGrid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}

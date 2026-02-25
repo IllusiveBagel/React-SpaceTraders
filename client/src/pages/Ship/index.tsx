@@ -1,23 +1,21 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
-import {
-    displayValue,
-    formatDuration,
-    formatRequirements,
-} from "helpers/fleetFormatters";
+import { formatDuration, formatRequirements } from "helpers/fleetFormatters";
 
 import useGetShip from "hooks/fleet/useGetShip";
 import useTransitProgress from "hooks/fleet/useTransitProgress";
 
 import { usePageTitle } from "components/Layout/PageTitleContext";
 import Container from "components/Common/Container";
-import ProgressBar from "components/Home/ProgressBar";
-import ShipDetails from "components/Fleet/ShipDetails";
-import DetailField from "components/Fleet/DetailField";
+import ProgressBar from "components/Common/ProgressBar";
+import ShipDetails from "components/Ship/ShipDetails";
+import DetailField from "components/Ship/DetailField";
 
 import styles from "./Ship.module.css";
 import Controls from "components/Ship/Controls";
+import ShipModules from "components/Ship/Modules";
+import ShipMounts from "components/Ship/Mounts";
 
 type ShipTab = "info" | "controls" | "modules" | "mounts" | "cargo";
 
@@ -228,7 +226,16 @@ const Ship = () => {
                         )}
 
                         {activeTab === "controls" && (
-                            <Controls shipSymbol={ship.symbol} ship={ship} />
+                            <div
+                                id="ship-tab-controls"
+                                role="tabpanel"
+                                aria-labelledby="ship-tab-controls-button"
+                            >
+                                <Controls
+                                    shipSymbol={ship.symbol}
+                                    ship={ship}
+                                />
+                            </div>
                         )}
 
                         {activeTab === "modules" && (
@@ -237,62 +244,7 @@ const Ship = () => {
                                 role="tabpanel"
                                 aria-labelledby="ship-tab-modules-button"
                             >
-                                {ship.modules.length > 0 ? (
-                                    <div className={styles.cardsGrid}>
-                                        {ship.modules.map((module) => (
-                                            <div
-                                                className={styles.infoCard}
-                                                key={`${ship.symbol}-${module.symbol}`}
-                                            >
-                                                <div>
-                                                    <h3
-                                                        className={
-                                                            styles.cardTitle
-                                                        }
-                                                    >
-                                                        {module.name}
-                                                    </h3>
-                                                    <p
-                                                        className={
-                                                            styles.cardMeta
-                                                        }
-                                                    >
-                                                        {module.symbol}
-                                                    </p>
-                                                </div>
-                                                <DetailField
-                                                    label="Capacity"
-                                                    value={displayValue(
-                                                        module.capacity,
-                                                    )}
-                                                />
-                                                <DetailField
-                                                    label="Range"
-                                                    value={displayValue(
-                                                        module.range,
-                                                    )}
-                                                />
-                                                <DetailField
-                                                    label="Requirements"
-                                                    value={formatRequirements(
-                                                        module.requirements,
-                                                    )}
-                                                />
-                                                <p
-                                                    className={
-                                                        styles.detailText
-                                                    }
-                                                >
-                                                    {module.description}
-                                                </p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <p className={styles.detailText}>
-                                        No modules installed.
-                                    </p>
-                                )}
+                                <ShipModules ship={ship} />
                             </div>
                         )}
 
@@ -302,65 +254,7 @@ const Ship = () => {
                                 role="tabpanel"
                                 aria-labelledby="ship-tab-mounts-button"
                             >
-                                {ship.mounts.length > 0 ? (
-                                    <div className={styles.cardsGrid}>
-                                        {ship.mounts.map((mount) => (
-                                            <div
-                                                className={styles.infoCard}
-                                                key={`${ship.symbol}-${mount.symbol}`}
-                                            >
-                                                <div>
-                                                    <h3
-                                                        className={
-                                                            styles.cardTitle
-                                                        }
-                                                    >
-                                                        {mount.name}
-                                                    </h3>
-                                                    <p
-                                                        className={
-                                                            styles.cardMeta
-                                                        }
-                                                    >
-                                                        {mount.symbol}
-                                                    </p>
-                                                </div>
-                                                <DetailField
-                                                    label="Strength"
-                                                    value={mount.strength}
-                                                />
-                                                <DetailField
-                                                    label="Deposits"
-                                                    value={
-                                                        (mount.deposits
-                                                            ?.length ?? 0) > 0
-                                                            ? (mount.deposits?.join(
-                                                                  ", ",
-                                                              ) ?? "None")
-                                                            : "None"
-                                                    }
-                                                />
-                                                <DetailField
-                                                    label="Requirements"
-                                                    value={formatRequirements(
-                                                        mount.requirements,
-                                                    )}
-                                                />
-                                                <p
-                                                    className={
-                                                        styles.detailText
-                                                    }
-                                                >
-                                                    {mount.description}
-                                                </p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <p className={styles.detailText}>
-                                        No mounts installed.
-                                    </p>
-                                )}
+                                <ShipMounts ship={ship} />
                             </div>
                         )}
 

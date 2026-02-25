@@ -8,6 +8,7 @@ import type { Ship } from "types/fleet";
 import styles from "./Controls.module.css";
 import FlightMode from "../FlightMode";
 import SellCargo from "../SellCargo";
+import Container from "components/Common/Container";
 
 const Controls = ({ shipSymbol, ship }: { shipSymbol: string; ship: Ship }) => {
     const [actionMessage, setActionMessage] = useState<string | null>(null);
@@ -39,65 +40,57 @@ const Controls = ({ shipSymbol, ship }: { shipSymbol: string; ship: Ship }) => {
     };
 
     return (
-        <div
-            id="ship-tab-controls"
-            role="tabpanel"
-            aria-labelledby="ship-tab-controls-button"
-        >
-            <section className={styles.controls}>
-                <div className={styles.controlsHeader}>
-                    <div>
-                        <h2 className={styles.controlsTitle}>
-                            Manual controls
-                        </h2>
-                        <p className={styles.controlsSubtitle}>
-                            Orbit, extract, and sell on demand.
-                        </p>
-                    </div>
-                    <div className={styles.controlsStatus}>
-                        {actionError && (
-                            <span className={styles.controlsError}>
-                                {actionError}
-                            </span>
-                        )}
-                        {actionMessage && (
-                            <span className={styles.controlsMessage}>
-                                {actionMessage}
-                            </span>
-                        )}
-                    </div>
+        <Container className={styles.controls}>
+            <div className={styles.controlsHeader}>
+                <div>
+                    <h2 className={styles.controlsTitle}>Manual controls</h2>
+                    <p className={styles.controlsSubtitle}>
+                        Orbit, extract, and sell on demand.
+                    </p>
                 </div>
-
-                <div className={styles.controlsGrid}>
-                    <ShipNavigation
-                        ship={ship}
-                        shipSymbol={shipSymbol}
-                        setActionError={setActionError}
-                        handleAction={handleAction}
-                    />
-                    {hasMiningMount && (
-                        <Mining
-                            ship={ship}
-                            shipSymbol={shipSymbol}
-                            handleAction={handleAction}
-                        />
+                <div className={styles.controlsStatus}>
+                    {actionError && (
+                        <span className={styles.controlsError}>
+                            {actionError}
+                        </span>
                     )}
-                    <FlightMode
-                        ship={ship}
-                        shipSymbol={shipSymbol}
-                        handleAction={handleAction}
-                        setActionError={setActionError}
-                        setActionMessage={setActionMessage}
-                    />
-                    <SellCargo
-                        ship={ship}
-                        shipSymbol={shipSymbol}
-                        handleAction={handleAction}
-                        setActionError={setActionError}
-                    />
+                    {actionMessage && (
+                        <span className={styles.controlsMessage}>
+                            {actionMessage}
+                        </span>
+                    )}
                 </div>
-            </section>
-        </div>
+            </div>
+
+            <div className={styles.controlsGrid}>
+                <ShipNavigation
+                    ship={ship}
+                    shipSymbol={shipSymbol}
+                    setActionError={setActionError}
+                    handleAction={handleAction}
+                />
+                {hasMiningMount && (
+                    <Mining
+                        ship={ship}
+                        shipSymbol={shipSymbol}
+                        handleAction={handleAction}
+                    />
+                )}
+                <FlightMode
+                    ship={ship}
+                    shipSymbol={shipSymbol}
+                    handleAction={handleAction}
+                    setActionError={setActionError}
+                    setActionMessage={setActionMessage}
+                />
+                <SellCargo
+                    ship={ship}
+                    shipSymbol={shipSymbol}
+                    handleAction={handleAction}
+                    setActionError={setActionError}
+                />
+            </div>
+        </Container>
     );
 };
 
