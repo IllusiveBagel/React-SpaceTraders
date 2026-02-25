@@ -2,7 +2,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import {
     dockShip,
+    createSurvey,
     extractResources,
+    extractWithSurvey,
     jettisonCargo,
     navigateShip,
     orbitShip,
@@ -10,6 +12,7 @@ import {
     setFlightMode,
     sellCargo,
 } from "services/shipActions";
+import type { Survey } from "types/survey";
 
 const useShipActions = (shipSymbol?: string) => {
     const queryClient = useQueryClient();
@@ -56,6 +59,16 @@ const useShipActions = (shipSymbol?: string) => {
         onSuccess: invalidateShip,
     });
 
+    const createSurveyMutation = useMutation({
+        mutationFn: async () => {
+            if (!shipSymbol) {
+                throw new Error("Ship symbol required");
+            }
+            return (await createSurvey(shipSymbol)).data.data.surveys;
+        },
+        onSuccess: invalidateShip,
+    });
+
     const extractMutation = useMutation({
         mutationFn: async () => {
             if (!shipSymbol) {
@@ -63,6 +76,17 @@ const useShipActions = (shipSymbol?: string) => {
             }
 
             return extractResources(shipSymbol);
+        },
+        onSuccess: invalidateShip,
+    });
+
+    const extractWithSurveyMutation = useMutation({
+        mutationFn: async (survey: Survey | null) => {
+            if (!shipSymbol || !survey) {
+                throw new Error("Ship symbol and survey required");
+            }
+
+            return extractWithSurvey(shipSymbol, survey);
         },
         onSuccess: invalidateShip,
     });
@@ -127,7 +151,9 @@ const useShipActions = (shipSymbol?: string) => {
         orbitMutation.isPending ||
         dockMutation.isPending ||
         navigateMutation.isPending ||
+        createSurveyMutation.isPending ||
         extractMutation.isPending ||
+        extractWithSurveyMutation.isPending ||
         refuelMutation.isPending ||
         sellMutation.isPending ||
         flightModeMutation.isPending ||
@@ -137,7 +163,9 @@ const useShipActions = (shipSymbol?: string) => {
         orbit: orbitMutation.mutateAsync,
         dock: dockMutation.mutateAsync,
         navigate: navigateMutation.mutateAsync,
+        createSurvey: createSurveyMutation.mutateAsync,
         extract: extractMutation.mutateAsync,
+        extractWithSurvey: extractWithSurveyMutation.mutateAsync,
         refuel: refuelMutation.mutateAsync,
         setFlightMode: flightModeMutation.mutateAsync,
         sell: sellMutation.mutateAsync,
@@ -147,7 +175,9 @@ const useShipActions = (shipSymbol?: string) => {
             orbitMutation.error ||
             dockMutation.error ||
             navigateMutation.error ||
+            createSurveyMutation.error ||
             extractMutation.error ||
+            extractWithSurveyMutation.error ||
             refuelMutation.error ||
             sellMutation.error ||
             flightModeMutation.error ||

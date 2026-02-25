@@ -82,18 +82,7 @@ type Ship = {
         quality: number;
     };
     modules: Module[];
-    mounts: {
-        symbol: string;
-        name: string;
-        description: string;
-        strength: number;
-        deposits?: string[];
-        requirements: {
-            power: number;
-            crew: number;
-            slots: number;
-        };
-    }[];
+    mounts: Mount[];
     cargo: {
         capacity: number;
         units: number;
@@ -133,4 +122,17 @@ type Module = {
     };
 };
 
-export type { Ship, Module };
+type Mount = {
+    symbol: string;
+    name: string;
+    description: string;
+    strength: number;
+    deposits?: string[];
+    requirements: {
+        power: number;
+        crew: number;
+        slots: number;
+    };
+};
+
+export type { Ship, Module, Mount };

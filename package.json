@@ -1,26 +1,26 @@
 {
-  "name": "react-spacetraders-monorepo",
-  "private": true,
-  "version": "0.1.0",
-  "workspaces": [
-    "client",
-    "backend"
-  ],
-  "scripts": {
-    "dev": "concurrently -n backend,client -c blue,green \"npm run dev --workspace backend\" \"npm run dev --workspace client\"",
-    "dev:backend": "npm run dev --workspace backend",
-    "dev:client": "npm run dev --workspace client",
-    "build": "npm run build --workspace client",
-    "lint": "npm run lint --workspace client",
-    "docker:build": "npm run docker:build:backend && npm run docker:build:frontend",
-    "docker:publish": "npm run docker:publish:backend && npm run docker:publish:frontend",
-    "docker:release": "npm run docker:build && npm run docker:publish",
-    "docker:build:backend": "docker build -f backend/Dockerfile -t ${DOCKER_NAMESPACE:-illusivebagel/react-spacetraders}-backend:${IMAGE_TAG:-latest} backend",
-    "docker:build:frontend": "docker build -f client/Dockerfile -t ${DOCKER_NAMESPACE:-illusivebagel/react-spacetraders}-frontend:${IMAGE_TAG:-latest} client",
-    "docker:publish:backend": "docker push ${DOCKER_NAMESPACE:-illusivebagel/react-spacetraders}-backend:${IMAGE_TAG:-latest}",
-    "docker:publish:frontend": "docker push ${DOCKER_NAMESPACE:-illusivebagel/react-spacetraders}-frontend:${IMAGE_TAG:-latest}"
-  },
-  "devDependencies": {
-    "concurrently": "^9.2.1"
-  }
+    "name": "react-spacetraders-monorepo",
+    "private": true,
+    "version": "0.1.0",
+    "workspaces": [
+        "client",
+        "backend"
+    ],
+    "scripts": {
+        "dev": "concurrently -n backend,client -c blue,green \"npm run dev --workspace backend\" \"npm run dev --workspace client\"",
+        "dev:backend": "npm run dev --workspace backend",
+        "dev:client": "npm run dev --workspace client",
+        "build": "npm run build --workspace client",
+        "lint": "npm run lint --workspace client",
+        "docker:build": "npm run docker:build:backend && npm run docker:build:frontend",
+        "docker:publish": "npm run docker:publish:backend && npm run docker:publish:frontend",
+        "docker:release": "npm run docker:build && npm run docker:publish",
+        "docker:build:backend": "docker build -f backend/Dockerfile -t ${DOCKER_NAMESPACE:-illusivebagel/react-spacetraders}-backend:${IMAGE_TAG:-latest} backend",
+        "docker:build:frontend": "docker build -f client/Dockerfile -t ${DOCKER_NAMESPACE:-illusivebagel/react-spacetraders}-frontend:${IMAGE_TAG:-latest} client",
+        "docker:publish:backend": "docker push ${DOCKER_NAMESPACE:-illusivebagel/react-spacetraders}-backend:${IMAGE_TAG:-latest}",
+        "docker:publish:frontend": "docker push ${DOCKER_NAMESPACE:-illusivebagel/react-spacetraders}-frontend:${IMAGE_TAG:-latest}"
+    },
+    "devDependencies": {
+        "concurrently": "^9.2.1"
+    }
 }

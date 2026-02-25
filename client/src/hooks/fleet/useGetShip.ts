@@ -7,8 +7,7 @@ const useGetShip = (shipSymbol?: string) => {
     return useQuery<Ship>({
         queryKey: ["ship", shipSymbol],
         enabled: Boolean(shipSymbol),
-        refetchInterval: 5000,
-        refetchIntervalInBackground: true,
+        // Only fetch on mount or manual refetch
         queryFn: async () => {
             const response = await axiosManager.get(`/my/ships/${shipSymbol}`);
             return response.data.data as Ship;

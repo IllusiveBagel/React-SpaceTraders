@@ -3,20 +3,28 @@ import { useState } from "react";
 import ShipNavigation from "components/Ship/ShipNavigation";
 import Mining from "components/Ship/Mining";
 
-import type { Ship } from "types/fleet";
+import { useZustandShip } from "hooks/fleet/useZustandShip";
 
 import styles from "./Controls.module.css";
 import FlightMode from "../FlightMode";
 import SellCargo from "../SellCargo";
 import Container from "components/Common/Container";
+import type { Survey } from "types/survey";
+import type { Mount } from "types/fleet";
 
-const Controls = ({ shipSymbol, ship }: { shipSymbol: string; ship: Ship }) => {
+const Controls = ({ shipSymbol }: { shipSymbol: string }) => {
     const [actionMessage, setActionMessage] = useState<string | null>(null);
     const [actionError, setActionError] = useState<string | null>(null);
+    const [surveys, setSurveys] = useState<Survey[]>([]);
+    const [survey, setSurvey] = useState<Survey | null>(null);
 
+    const ship = useZustandShip(shipSymbol);
+    if (!ship) {
+        return <div className={styles.controls}>Loading ship data...</div>;
+    }
     const hasMiningMount = Boolean(
-        ship?.mounts.some(
-            (mount) =>
+        ship.mounts.some(
+            (mount: Mount) =>
                 mount.symbol.toUpperCase().includes("MINING") ||
                 mount.name.toUpperCase().includes("MINING"),
         ),
@@ -74,6 +82,10 @@ const Controls = ({ shipSymbol, ship }: { shipSymbol: string; ship: Ship }) => {
                         ship={ship}
                         shipSymbol={shipSymbol}
                         handleAction={handleAction}
+                        surveys={surveys}
+                        setSurveys={setSurveys}
+                        survey={survey}
+                        setSurvey={setSurvey}
                     />
                 )}
                 <FlightMode

@@ -1,4 +1,5 @@
 import axiosManager from "services/axiosManager";
+import type { Survey } from "types/survey";
 
 type NavigatePayload = {
     waypointSymbol: string;
@@ -27,8 +28,17 @@ const navigateShip = (shipSymbol: string, waypointSymbol: string) => {
     return axiosManager.post(`/my/ships/${shipSymbol}/navigate`, payload);
 };
 
+const createSurvey = (shipSymbol: string) => {
+    return axiosManager.post(`/my/ships/${shipSymbol}/survey`);
+};
+
 const extractResources = (shipSymbol: string) => {
     return axiosManager.post(`/my/ships/${shipSymbol}/extract`);
+};
+
+const extractWithSurvey = (shipSymbol: string, survey: Survey | null) => {
+    const payload: Survey | null = survey;
+    return axiosManager.post(`/my/ships/${shipSymbol}/extract/survey`, payload);
 };
 
 type RefuelPayload = {
@@ -61,6 +71,7 @@ const setFlightMode = (shipSymbol: string, flightMode: string) => {
 
 export {
     dockShip,
+    createSurvey,
     extractResources,
     navigateShip,
     orbitShip,
@@ -68,4 +79,5 @@ export {
     setFlightMode,
     sellCargo,
     jettisonCargo,
+    extractWithSurvey,
 };

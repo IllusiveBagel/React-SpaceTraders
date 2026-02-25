@@ -14,6 +14,7 @@ import DetailField from "components/Ship/DetailField";
 
 import styles from "./Ship.module.css";
 import Controls from "components/Ship/Controls";
+import { useZustandShips } from "hooks/fleet/useZustandShips";
 import ShipModules from "components/Ship/Modules";
 import ShipMounts from "components/Ship/Mounts";
 
@@ -24,6 +25,7 @@ const getStatusClass = (status: string) => {
 };
 
 const Ship = () => {
+    useZustandShips(); // Ensure ships are fetched for Zustand store
     const { shipSymbol } = useParams();
     const { data: ship, isLoading, error } = useGetShip(shipSymbol);
     const transit = useTransitProgress(ship);
@@ -231,10 +233,7 @@ const Ship = () => {
                                 role="tabpanel"
                                 aria-labelledby="ship-tab-controls-button"
                             >
-                                <Controls
-                                    shipSymbol={ship.symbol}
-                                    ship={ship}
-                                />
+                                <Controls shipSymbol={ship.symbol} />
                             </div>
                         )}
 
