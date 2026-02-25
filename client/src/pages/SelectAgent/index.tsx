@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
-import useRegisterAgent from "hooks/account/useRegisterAgent";
 import { isBackendConfigured } from "services/backendAxios";
 import {
     connectStoredAgent,
@@ -11,6 +10,8 @@ import {
 } from "services/backendAgentStore";
 import axiosManager from "services/axiosManager";
 import { clearAgentToken, setAgentToken } from "services/tokenStore";
+
+import { useRegisterAgent } from "hooks/account/useAccountActions";
 
 import styles from "./SelectAgent.module.css";
 

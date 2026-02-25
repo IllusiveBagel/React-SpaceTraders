@@ -1,6 +1,7 @@
-import { useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 
-import { registerAgent } from "services/accountActions";
+import { getAccount, registerAgent } from "services/accountActions";
+import type { Account } from "types/account";
 import type { Agent } from "types/agent";
 
 type RegisterAgentPayload = {
@@ -13,6 +14,16 @@ type RegisterAgentResponse = {
     agent: Agent;
 };
 
+const useGetAccount = () => {
+    return useQuery<Account>({
+        queryKey: ["account"],
+        queryFn: async () => {
+            const response = await getAccount();
+            return response.data.data as Account;
+        },
+    });
+};
+
 const useRegisterAgent = () => {
     return useMutation<RegisterAgentResponse, Error, RegisterAgentPayload>({
         mutationFn: async (payload) => {
@@ -22,4 +33,4 @@ const useRegisterAgent = () => {
     });
 };
 
-export default useRegisterAgent;
+export { useGetAccount, useRegisterAgent };
