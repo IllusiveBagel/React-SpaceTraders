@@ -44,6 +44,15 @@ const Sidebar = ({ isMobileOpen, onMobileClose }: SidebarProps) => {
                     <li>
                         <Link
                             className={styles.link}
+                            to="/"
+                            onClick={handleNavClick}
+                        >
+                            Dashboard
+                        </Link>
+                    </li>
+                    <li>
+                        <Link
+                            className={styles.link}
                             to="/fleet"
                             onClick={handleNavClick}
                         >

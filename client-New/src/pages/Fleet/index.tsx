@@ -1,15 +1,26 @@
 import ShipCard from "components/Fleet/ShipCard";
 import styles from "./Fleet.module.css";
+import { useShipsWithStore } from "hooks/Ship";
 
 const Fleet = () => {
-    const { data: ships, isLoading, error } = useGetShips();
+    const { ships, isLoading, error } = useShipsWithStore();
 
     if (isLoading) {
-        return <div className={styles.state}>Loading fleet...</div>;
+        return (
+            <section className={styles.fleet}>
+                <p className={styles.state}>Loading ships...</p>
+            </section>
+        );
     }
 
     if (error) {
-        return <div className={styles.error}>Error: {error.message}</div>;
+        return (
+            <section className={styles.fleet}>
+                <p className={styles.state}>
+                    Error loading ships: {error.message}
+                </p>
+            </section>
+        );
     }
 
     return (

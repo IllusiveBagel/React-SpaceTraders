@@ -16,8 +16,8 @@ import {
     warpShip,
     orbitShip,
     purchaseCargo,
-} from "../../services/Ship/shipMutationService";
-import type { Survey } from "../../types/Survey";
+} from "services/Ship/shipMutationService";
+import type { Survey } from "types/Survey";
 import type {
     Ship,
     ShipCargo,
@@ -25,20 +25,15 @@ import type {
     ShipConditionEvent,
     ScannedShip,
     ShipFuel,
-} from "../../types/Ship";
-import type {
-    Transaction,
-    Chart,
-    Extraction,
-    TradeSymbol,
-} from "../../types/Common";
-import type { Agent } from "../../types/Agent";
-import type { Waypoint } from "../../types/Waypoint";
-import type { Contract } from "../../types/Contract";
-import type { WaypointModifier } from "../../types/Waypoint";
-import type { Cooldown } from "../../types/Cooldown";
-import type { ScannedSystem } from "../../types/System";
-import type { ScannedWaypoint } from "../../types/Waypoint/ScannedWaypoint";
+} from "types/Ship";
+import type { Transaction, Chart, Extraction, TradeSymbol } from "types/Common";
+import type { Agent } from "types/Agent";
+import type { Waypoint } from "types/Waypoint";
+import type { Contract } from "types/Contract";
+import type { WaypointModifier } from "types/Waypoint";
+import type { Cooldown } from "types/Cooldown";
+import type { ScannedSystem } from "types/System";
+import type { ScannedWaypoint } from "types/Waypoint/ScannedWaypoint";
 
 const useMutateShip = (shipSymbol?: string) => {
     const purchaseShipMutation = useMutation({

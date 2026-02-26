@@ -4,10 +4,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 import Layout from "components/Navigation/Layout";
-import Home from "pages/Home";
+import Dashboard from "pages/Dashboard";
 import Fleet from "pages/Fleet";
 import SelectAgent from "pages/SelectAgent";
-import RequireAgent from "components/Auth/RequireAgent";
+import RequireAgent from "components/Auth";
 
 import "./index.css";
 
@@ -21,7 +21,7 @@ const router = createBrowserRouter([
         children: [
             {
                 path: "/",
-                element: <Home />,
+                element: <Dashboard />,
             },
             {
                 path: "/fleet",

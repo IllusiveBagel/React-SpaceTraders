@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 
-import useTransitProgress from "hooks/fleet/useTransitProgress";
+import useTransitProgress from "hooks/useTransitProgress";
 
 import { formatDuration, formatPercent } from "helpers/fleetFormatters";
 

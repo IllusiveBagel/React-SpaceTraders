@@ -1,41 +1,24 @@
 import { create } from "zustand";
+import { devtools } from "zustand/middleware";
 
-import type { Ship } from "../types/Ship";
-import type { Contract } from "../types/Contract";
+import type { Ship } from "types/Ship";
+import type { Agent } from "types/Agent";
 
 interface SpaceTradersState {
+    agent: Agent;
+    setAgent: (agent: Agent) => void;
     ships: Ship[];
-    contracts: Contract[];
-    cooldowns: Record<string, number>; // shipId -> cooldown seconds
     setShips: (ships: Ship[]) => void;
-    setContracts: (contracts: Contract[]) => void;
-    setCooldown: (shipId: string, cooldown: number) => void;
-    decrementCooldowns: () => void;
 }
 
-export const useSpaceTradersStore = create<SpaceTradersState>((set) => ({
-    ships: [],
-    contracts: [],
-    cooldowns: {},
-    setShips: (ships: Ship[]) => set({ ships }),
-    setContracts: (contracts: Contract[]) => set({ contracts }),
-    setCooldown: (shipId: string, cooldown: number) =>
-        set((state) => ({
-            cooldowns: { ...state.cooldowns, [shipId]: cooldown },
-        })),
-    decrementCooldowns: () =>
-        set((state) => {
-            const updated = { ...state.cooldowns };
-            Object.keys(updated).forEach((id) => {
-                if (updated[id] > 0) updated[id] -= 1;
-            });
-            return { cooldowns: updated };
-        }),
-}));
+export const useSpaceTradersStore = create(
+    devtools((set) => ({
+        // Store
+        agent: {} as Agent,
+        ships: [] as Ship[],
 
-// Optionally, set up an interval to decrement cooldowns globally
-if (typeof window !== "undefined") {
-    setInterval(() => {
-        useSpaceTradersStore.getState().decrementCooldowns();
-    }, 1000);
-}
+        // Actions
+        setAgent: (agent: Agent) => set({ agent }),
+        setShips: (ships: Ship[]) => set({ ships }),
+    })),
+);

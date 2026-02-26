@@ -1,4 +1,4 @@
-import useGetAgent from "hooks/agent/useGetAgent";
+import { useAgentWithStore } from "hooks/Agent";
 
 import styles from "./Header.module.css";
 
@@ -8,7 +8,7 @@ type HeaderProps = {
 };
 
 const Header = ({ isMobileNavOpen, onMobileNavToggle }: HeaderProps) => {
-    const { data: agent, isLoading, error } = useGetAgent();
+    const { agent, isLoading, error } = useAgentWithStore();
     const credits = agent
         ? new Intl.NumberFormat("en-US").format(agent.credits)
         : "--";

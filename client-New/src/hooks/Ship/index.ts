@@ -1,4 +1,5 @@
 import useMutateShip from "./useMutateShip";
 import useQueryShip from "./useQueryShip";
+import useShipsWithStore from "./useShipsWithStore";
 
-export { useMutateShip, useQueryShip };
+export { useMutateShip, useQueryShip, useShipsWithStore };
