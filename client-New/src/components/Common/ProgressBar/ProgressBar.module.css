@@ -1,0 +1,43 @@
+.progressContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+}
+
+.label {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 500;
+}
+
+.barWrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.barBackground {
+    flex: 1;
+    height: 6px;
+    background: rgba(148, 163, 184, 0.1);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.barFill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), #4ade80);
+    border-radius: 999px;
+    transition: width 0.25s ease-out;
+}
+
+.percentage {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.8rem;
+    min-width: 35px;
+    text-align: right;
+}
