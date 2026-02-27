@@ -1,6 +1,7 @@
 import ShipCard from "components/Fleet/ShipCard";
 import styles from "./Fleet.module.css";
 import { useShipsWithStore } from "hooks/Ship";
+import type { Ship } from "types/Ship";
 
 const Fleet = () => {
     const { ships, isLoading, error } = useShipsWithStore();
@@ -33,7 +34,7 @@ const Fleet = () => {
 
             {ships && ships.length > 0 ? (
                 <div className={styles.list}>
-                    {ships.map((ship) => (
+                    {ships.map((ship: Ship) => (
                         <ShipCard key={ship.symbol} ship={ship} />
                     ))}
                 </div>

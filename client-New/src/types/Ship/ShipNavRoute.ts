@@ -1,7 +1,7 @@
 import type { ShipNavRouteWaypoint } from "./";
 
 export type ShipNavRoute = {
-    destinations: ShipNavRouteWaypoint;
+    destination: ShipNavRouteWaypoint;
     origin: ShipNavRouteWaypoint;
     departureTime: string;
     arrival: string;

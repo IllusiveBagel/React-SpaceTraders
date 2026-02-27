@@ -6,6 +6,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Layout from "components/Navigation/Layout";
 import Dashboard from "pages/Dashboard";
 import Fleet from "pages/Fleet";
+import Ship from "pages/Ship";
 import SelectAgent from "pages/SelectAgent";
 import RequireAgent from "components/Auth";
 
@@ -26,6 +27,10 @@ const router = createBrowserRouter([
             {
                 path: "/fleet",
                 element: <Fleet />,
+            },
+            {
+                path: "/fleet/:shipSymbol",
+                element: <Ship />,
             },
         ],
     },
