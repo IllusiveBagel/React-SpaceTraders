@@ -9,9 +9,10 @@ import useTransitProgress from "hooks/useTransitProgress";
 import Container from "components/Common/Container";
 import ProgressBar from "components/Common/ProgressBar";
 import ShipDetails from "components/Ship/ShipDetails";
-import ShipCargo from "components/Ship/ShipCargo";
+import ShipControls from "components/Ship/ShipControls";
 import ShipModules from "components/Ship/ShipModules";
 import ShipMounts from "components/Ship/ShipMounts";
+import ShipCargo from "components/Ship/ShipCargo";
 
 import type { Ship } from "types/Ship";
 
@@ -112,14 +113,14 @@ const ShipPage = () => {
                         {ship.crew.capacity}
                     </p>
                 </div>
-                <div>
+                {/*                 <div>
                     <p className={styles.statLabel}>Cooldown</p>
                     <p className={styles.statValue}>
                         {ship.cooldown.remainingSeconds > 0
                             ? `${ship.cooldown.remainingSeconds}s`
                             : "Ready"}
                     </p>
-                </div>
+                </div> */}
             </div>
 
             {transit.isInTransit && (
@@ -172,6 +173,15 @@ const ShipPage = () => {
                         aria-labelledby="ship-tab-info-button"
                     >
                         <ShipDetails ship={ship} />
+                    </div>
+                )}
+                {activeTab === "controls" && (
+                    <div
+                        id="ship-tab-controls"
+                        role="tabpanel"
+                        aria-labelledby="ship-tab-controls-button"
+                    >
+                        <ShipControls ship={ship} />
                     </div>
                 )}
                 {activeTab === "modules" && (

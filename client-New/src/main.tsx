@@ -11,6 +11,7 @@ import SelectAgent from "pages/SelectAgent";
 import RequireAgent from "components/Auth";
 
 import "./index.css";
+import ContractsPage from "pages/Contracts";
 
 const router = createBrowserRouter([
     {
@@ -31,6 +32,10 @@ const router = createBrowserRouter([
             {
                 path: "/fleet/:shipSymbol",
                 element: <Ship />,
+            },
+            {
+                path: "/contracts",
+                element: <ContractsPage />,
             },
         ],
     },

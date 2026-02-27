@@ -1,3 +1,13 @@
+.controls {
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    background: var(--surface-soft);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+}
+
 .controlRow {
     display: flex;
     flex-wrap: wrap;
@@ -77,82 +87,15 @@
     cursor: not-allowed;
 }
 
-.controlLabel {
-    margin: 0;
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    flex: 0 0 auto;
-}
-
 .controlHint {
     margin: 0;
     font-size: 0.8rem;
     color: var(--text-secondary);
 }
 
-.controlToggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 0;
-    border-radius: 0;
-    border: none;
-    background: transparent;
-    font-size: 0.8rem;
+.controlLabel {
+    margin: 0;
+    font-size: 0.9rem;
     color: var(--text-secondary);
-    transition:
-        border-color 0.2s ease,
-        background 0.2s ease;
     flex: 0 0 auto;
-    width: fit-content;
-    max-width: fit-content;
-    white-space: nowrap;
-}
-
-.controlToggle input {
-    appearance: none;
-    flex: 0 0 auto;
-    width: 30px;
-    height: 18px;
-    border-radius: 999px;
-    border: 1px solid rgba(148, 163, 184, 0.4);
-    background: rgba(15, 23, 42, 0.6);
-    position: relative;
-    cursor: pointer;
-    transition:
-        background 0.2s ease,
-        border-color 0.2s ease;
-}
-
-.controlToggle input::before {
-    content: "";
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: rgba(148, 163, 184, 0.7);
-    transition:
-        transform 0.2s ease,
-        background 0.2s ease;
-}
-
-.controlToggle input:checked {
-    background: rgba(96, 165, 250, 0.35);
-    border-color: rgba(96, 165, 250, 0.7);
-}
-
-.controlToggle input:checked::before {
-    transform: translateX(12px);
-    background: #e0f2fe;
-}
-
-.controlToggle input:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.controlToggleLabel {
-    white-space: nowrap;
 }

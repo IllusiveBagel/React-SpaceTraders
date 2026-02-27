@@ -1,8 +1,12 @@
 import type { Ship } from "types/Ship";
 
+import { useMutateShip } from "hooks/Ship";
+
 import styles from "./ShipCargo.module.css";
 
 const ShipCargo = ({ ship }: { ship: Ship }) => {
+    const { jettisonCargo, sellCargo } = useMutateShip(ship.symbol);
+
     const cargoPercent = ship
         ? ship.cargo.capacity > 0
             ? Math.min(
@@ -63,12 +67,24 @@ const ShipCargo = ({ ship }: { ship: Ship }) => {
                                             disabled={
                                                 ship.nav.status !== "DOCKED"
                                             }
+                                            onClick={() =>
+                                                sellCargo.mutate({
+                                                    cargoSymbol: item.symbol,
+                                                    units: item.units,
+                                                })
+                                            }
                                         >
                                             Sell
                                         </button>
                                         <button
                                             type="button"
                                             disabled={item.units === 0}
+                                            onClick={() =>
+                                                jettisonCargo.mutate({
+                                                    cargoSymbol: item.symbol,
+                                                    units: item.units,
+                                                })
+                                            }
                                         >
                                             Jettison
                                         </button>

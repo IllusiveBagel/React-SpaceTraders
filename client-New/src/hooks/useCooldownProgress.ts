@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-import type { Ship } from "types/Ship";
+import { useQueryShip } from "./Ship";
 
 type CooldownProgress = {
     isCoolingDown: boolean;
@@ -8,22 +8,29 @@ type CooldownProgress = {
     elapsedSeconds: number;
     remainingSeconds: number;
     progressPercent: number;
+    refetchCooldown: () => void;
     readyTime: string | null;
 };
 
-const useCooldownProgress = (ship?: Ship): CooldownProgress => {
+const useCooldownProgress = (shipSymbol?: string): CooldownProgress => {
+    const { useShipCooldownQuery } = useQueryShip(shipSymbol);
+    const { data: cooldownData, refetch } = useShipCooldownQuery();
     const [now, setNow] = useState(() => Date.now());
 
+    const refetchCooldown = () => {
+        refetch();
+    };
+
     const timings = useMemo(() => {
-        if (!ship) {
+        if (!cooldownData) {
             return null;
         }
 
         const totalSeconds =
-            ship.cooldown.totalSeconds || ship.cooldown.remainingSeconds || 0;
-        const parsedEnd = Date.parse(ship.cooldown.expiration);
+            cooldownData?.totalSeconds || cooldownData?.remainingSeconds || 0;
+        const parsedEnd = Date.parse(cooldownData?.expiration || "");
         const end = Number.isNaN(parsedEnd)
-            ? Date.now() + ship.cooldown.remainingSeconds * 1000
+            ? Date.now() + (cooldownData?.remainingSeconds || 0) * 1000
             : parsedEnd;
 
         if (totalSeconds <= 0) {
@@ -37,10 +44,10 @@ const useCooldownProgress = (ship?: Ship): CooldownProgress => {
         }
 
         return { start, end };
-    }, [ship]);
+    }, [cooldownData]);
 
     const isCoolingDown = Boolean(
-        ship && ship.cooldown.remainingSeconds > 0 && timings,
+        cooldownData && cooldownData?.remainingSeconds > 0 && timings,
     );
 
     useEffect(() => {
@@ -55,7 +62,7 @@ const useCooldownProgress = (ship?: Ship): CooldownProgress => {
         return () => window.clearInterval(timer);
     }, [isCoolingDown]);
 
-    if (!timings || !ship) {
+    if (!timings || !cooldownData) {
         return {
             isCoolingDown: false,
             totalSeconds: 0,
@@ -63,6 +70,7 @@ const useCooldownProgress = (ship?: Ship): CooldownProgress => {
             remainingSeconds: 0,
             progressPercent: 0,
             readyTime: null,
+            refetchCooldown,
         };
     }
 
@@ -91,6 +99,7 @@ const useCooldownProgress = (ship?: Ship): CooldownProgress => {
         remainingSeconds,
         progressPercent,
         readyTime,
+        refetchCooldown,
     };
 };
 

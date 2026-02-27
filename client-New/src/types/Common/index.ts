@@ -4,6 +4,7 @@ import type { Transaction } from "./Transaction";
 import type { Chart } from "./Chart";
 import type { TradeSymbol } from "./TradeSymbol";
 import type { Extraction } from "./Extraction";
+import type { Produce } from "./Produce";
 
 export type {
     Deposits,
@@ -12,4 +13,5 @@ export type {
     Chart,
     TradeSymbol,
     Extraction,
+    Produce,
 };

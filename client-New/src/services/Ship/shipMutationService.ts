@@ -1,6 +1,6 @@
 import axiosManager from "../../services/axiosManager";
 import type { Survey } from "../../types/Survey";
-import type { TradeSymbol } from "../../types/Common";
+import type { Produce, TradeSymbol } from "../../types/Common";
 
 const purchaseShip = (shipType: string, location: string) => {
     return axiosManager.post("/my/ships", {
@@ -35,7 +35,7 @@ const jettisonCargo = (
     units: number,
 ) => {
     return axiosManager.post(`/my/ships/${shipSymbol}/jettison`, {
-        cargoSymbol,
+        symbol: cargoSymbol,
         units,
     });
 };
@@ -89,6 +89,25 @@ const purchaseCargo = (
     });
 };
 
+const shipRefine = (shipSymbol: string, produceSymbol: Produce) => {
+    return axiosManager.post(`/my/ships/${shipSymbol}/refine`, {
+        produce: produceSymbol,
+    });
+};
+
+const sellCargo = (shipSymbol: string, symbol: TradeSymbol, units: number) => {
+    return axiosManager.post(`/my/ships/${shipSymbol}/sell`, {
+        symbol,
+        units,
+    });
+};
+
+const patchShipNav = (shipSymbol: string, flightMode: string) => {
+    return axiosManager.patch(`/my/ships/${shipSymbol}/nav`, {
+        flightMode,
+    });
+};
+
 export {
     purchaseShip,
     createChart,
@@ -106,4 +125,7 @@ export {
     warpShip,
     orbitShip,
     purchaseCargo,
+    shipRefine,
+    sellCargo,
+    patchShipNav,
 };

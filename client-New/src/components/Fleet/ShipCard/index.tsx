@@ -84,14 +84,6 @@ const ShipCard = ({ ship }: ShipCardProps) => {
                     </span>
                 </div>
                 <div className={styles.metric}>
-                    <span className={styles.label}>Cooldown</span>
-                    <span className={styles.value}>
-                        {ship.cooldown.remainingSeconds > 0
-                            ? `${ship.cooldown.remainingSeconds}s`
-                            : "Ready"}
-                    </span>
-                </div>
-                <div className={styles.metric}>
                     <span className={styles.label}>Crew</span>
                     <span className={styles.value}>
                         {ship.crew.current}/{ship.crew.required}/

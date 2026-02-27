@@ -5,7 +5,8 @@ import { useQueryShip } from "./";
 const useShipsWithStore = () => {
     const ships = useSpaceTradersStore((state) => state.ships);
     const setShips = useSpaceTradersStore((state) => state.setShips);
-    const { getShips } = useQueryShip();
+    const { useShipsQuery } = useQueryShip();
+    const getShips = useShipsQuery();
 
     // If Zustand ships are empty, fetch from API and update Zustand
     useEffect(() => {

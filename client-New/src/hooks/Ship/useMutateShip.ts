@@ -16,6 +16,9 @@ import {
     warpShip,
     orbitShip,
     purchaseCargo,
+    shipRefine,
+    sellCargo,
+    patchShipNav,
 } from "services/Ship/shipMutationService";
 import type { Survey } from "types/Survey";
 import type {
@@ -26,7 +29,13 @@ import type {
     ScannedShip,
     ShipFuel,
 } from "types/Ship";
-import type { Transaction, Chart, Extraction, TradeSymbol } from "types/Common";
+import type {
+    Transaction,
+    Chart,
+    Extraction,
+    TradeSymbol,
+    Produce,
+} from "types/Common";
 import type { Agent } from "types/Agent";
 import type { Waypoint } from "types/Waypoint";
 import type { Contract } from "types/Contract";
@@ -34,8 +43,17 @@ import type { WaypointModifier } from "types/Waypoint";
 import type { Cooldown } from "types/Cooldown";
 import type { ScannedSystem } from "types/System";
 import type { ScannedWaypoint } from "types/Waypoint/ScannedWaypoint";
+import { useSpaceTradersStore } from "../../store/spaceTradersStore";
 
 const useMutateShip = (shipSymbol?: string) => {
+    const setAgent = useSpaceTradersStore((state) => state.setAgent);
+    const setShipCargo = useSpaceTradersStore((state) => state.setShipCargo);
+    const setShipNav = useSpaceTradersStore((state) => state.setShipNav);
+    const setShipFuel = useSpaceTradersStore((state) => state.setShipFuel);
+    const setShipCooldown = useSpaceTradersStore(
+        (state) => state.setShipCooldown,
+    );
+
     const purchaseShipMutation = useMutation({
         mutationKey: ["purchaseShip"],
         mutationFn: async ({
@@ -98,7 +116,10 @@ const useMutateShip = (shipSymbol?: string) => {
             if (!shipSymbol) {
                 throw new Error("Ship symbol is required to extract resources");
             }
-            return (await extractResources(shipSymbol)).data.data as {
+            const response = await extractResources(shipSymbol);
+            setShipCargo(shipSymbol, response.data.data.cargo);
+            setShipCooldown(shipSymbol, response.data.data.cooldown);
+            return response.data.data as {
                 extraction: Extraction;
                 cooldown: Cooldown;
                 cargo: ShipCargo;
@@ -139,8 +160,13 @@ const useMutateShip = (shipSymbol?: string) => {
             if (!shipSymbol) {
                 throw new Error("Ship symbol is required to jettison cargo");
             }
-            return (await jettisonCargo(shipSymbol, cargoSymbol, units)).data
-                .data as { cargo: ShipCargo };
+            const response = await jettisonCargo(
+                shipSymbol,
+                cargoSymbol,
+                units,
+            );
+            setShipCargo(shipSymbol, response.data.data.cargo);
+            return response.data.data as { cargo: ShipCargo };
         },
     });
 
@@ -217,8 +243,10 @@ const useMutateShip = (shipSymbol?: string) => {
             if (!shipSymbol) {
                 throw new Error("Ship symbol is required to navigate the ship");
             }
-            return (await navigateShip(shipSymbol, waypointSymbol)).data
-                .data as {
+            const response = await navigateShip(shipSymbol, waypointSymbol);
+            setShipNav(shipSymbol, response.data.data.nav);
+            setShipFuel(shipSymbol, response.data.data.fuel);
+            return response.data.data as {
                 nav: ShipNav;
                 fuel: ShipFuel;
                 events: ShipConditionEvent[];
@@ -273,6 +301,64 @@ const useMutateShip = (shipSymbol?: string) => {
         },
     });
 
+    const shipRefineMutation = useMutation({
+        mutationKey: ["refineResources", shipSymbol],
+        mutationFn: async (produceSymbol: Produce) => {
+            if (!shipSymbol) {
+                throw new Error("Ship symbol is required to refine resources");
+            }
+            const response = await shipRefine(shipSymbol, produceSymbol);
+            setShipCargo(shipSymbol, response.data.data.cargo);
+            setShipCooldown(shipSymbol, response.data.data.cooldown);
+            return response.data.data as {
+                cargo: ShipCargo;
+                cooldown: Cooldown;
+            };
+        },
+    });
+
+    const sellCargoMutation = useMutation({
+        mutationKey: ["sellCargo", shipSymbol],
+        mutationFn: async ({
+            cargoSymbol,
+            units,
+        }: {
+            cargoSymbol: TradeSymbol;
+            units: number;
+        }) => {
+            if (!shipSymbol) {
+                throw new Error("Ship symbol is required to sell cargo");
+            }
+            const response = await sellCargo(shipSymbol, cargoSymbol, units);
+            setAgent(response.data.data.agent);
+            setShipCargo(shipSymbol, response.data.data.cargo);
+            return response.data.data as {
+                cargo: ShipCargo;
+                transaction: Transaction;
+                agent: Agent;
+            };
+        },
+    });
+
+    const patchShipNavMutation = useMutation({
+        mutationKey: ["patchShipNav", shipSymbol],
+        mutationFn: async (flightMode: string) => {
+            if (!shipSymbol) {
+                throw new Error(
+                    "Ship symbol is required to patch ship navigation",
+                );
+            }
+            const response = await patchShipNav(shipSymbol, flightMode);
+            setShipNav(shipSymbol, response.data.data.nav);
+            setShipFuel(shipSymbol, response.data.data.fuel);
+            return response.data.data as {
+                nav: ShipNav;
+                fuel: ShipFuel;
+                events: ShipConditionEvent[];
+            };
+        },
+    });
+
     return {
         purchaseShip: purchaseShipMutation,
         createChart: createChartMutation,
@@ -290,6 +376,9 @@ const useMutateShip = (shipSymbol?: string) => {
         warpShip: warpShipMutation,
         orbitShip: orbitShipMutation,
         purchaseCargo: purchaseCargoMutation,
+        shipRefine: shipRefineMutation,
+        sellCargo: sellCargoMutation,
+        patchShipNav: patchShipNavMutation,
     };
 };
 

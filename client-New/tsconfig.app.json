@@ -32,7 +32,8 @@
       "services/*": ["./src/services/*"],
       "types/*": ["./src/types/*"],
       "pages/*": ["./src/pages/*"],
-      "automation/*": ["./src/automation/*"]
+      "automation/*": ["./src/automation/*"],
+      "store/*": ["./src/store/*"]
     }
   },
   "include": ["src"]

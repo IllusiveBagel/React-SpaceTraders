@@ -59,6 +59,15 @@ const Sidebar = ({ isMobileOpen, onMobileClose }: SidebarProps) => {
                             Fleet
                         </Link>
                     </li>
+                    <li>
+                        <Link
+                            className={styles.link}
+                            to="/contracts"
+                            onClick={handleNavClick}
+                        >
+                            Contracts
+                        </Link>
+                    </li>
                 </ul>
                 <button
                     type="button"
