@@ -122,7 +122,7 @@ const ShipDetails = ({ ship }: ShipDetailsProps) => {
                 <p className={styles.detailText}>{ship.reactor.description}</p>
             </Card>
 
-            <Card title="Fuel & Cooldown" cardLight>
+            <Card title="Fuel" cardLight>
                 <DetailsTable
                     data={[
                         { label: "Fuel Current", value: ship.fuel.current },
@@ -134,18 +134,6 @@ const ShipDetails = ({ ship }: ShipDetailsProps) => {
                         {
                             label: "Fuel Use Time",
                             value: formatDateTime(ship.fuel.consumed.timestamp),
-                        },
-                        {
-                            label: "Cooldown Total",
-                            value: `${ship.cooldown.totalSeconds}s`,
-                        },
-                        {
-                            label: "Cooldown Remaining",
-                            value: `${ship.cooldown.remainingSeconds}s`,
-                        },
-                        {
-                            label: "Cooldown Expires",
-                            value: formatDateTime(ship.cooldown.expiration),
                         },
                     ]}
                 />
