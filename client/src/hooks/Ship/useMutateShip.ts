@@ -46,12 +46,14 @@ import type { ScannedWaypoint } from "types/Waypoint/ScannedWaypoint";
 import { useSpaceTradersStore } from "../../store/spaceTradersStore";
 
 const useMutateShip = (shipSymbol?: string) => {
-    const setAgent = useSpaceTradersStore((state) => state.setAgent);
-    const setShipCargo = useSpaceTradersStore((state) => state.setShipCargo);
-    const setShipNav = useSpaceTradersStore((state) => state.setShipNav);
-    const setShipFuel = useSpaceTradersStore((state) => state.setShipFuel);
+    const setAgent = useSpaceTradersStore((state: any) => state.setAgent);
+    const setShipCargo = useSpaceTradersStore(
+        (state: any) => state.setShipCargo,
+    );
+    const setShipNav = useSpaceTradersStore((state: any) => state.setShipNav);
+    const setShipFuel = useSpaceTradersStore((state: any) => state.setShipFuel);
     const setShipCooldown = useSpaceTradersStore(
-        (state) => state.setShipCooldown,
+        (state: any) => state.setShipCooldown,
     );
 
     const purchaseShipMutation = useMutation({

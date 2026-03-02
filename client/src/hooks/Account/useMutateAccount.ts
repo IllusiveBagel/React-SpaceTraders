@@ -7,8 +7,8 @@ import type { Ship } from "types/Ship";
 import { useSpaceTradersStore } from "../../store/spaceTradersStore";
 
 const useMutateAccount = () => {
-    const setAgent = useSpaceTradersStore((state) => state.setAgent);
-    const setShips = useSpaceTradersStore((state) => state.setShips);
+    const setAgent = useSpaceTradersStore((state: any) => state.setAgent);
+    const setShips = useSpaceTradersStore((state: any) => state.setShips);
 
     const registerAgentMutation = useMutation({
         mutationKey: ["registerAgent"],

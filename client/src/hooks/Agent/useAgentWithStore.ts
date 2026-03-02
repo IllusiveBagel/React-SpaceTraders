@@ -3,8 +3,8 @@ import { useSpaceTradersStore } from "../../store/spaceTradersStore";
 import { useQueryAgent } from "./";
 
 const useAgentWithStore = () => {
-    const agent = useSpaceTradersStore((state) => state.agent);
-    const setAgent = useSpaceTradersStore((state) => state.setAgent);
+    const agent = useSpaceTradersStore((state: any) => state.agent);
+    const setAgent = useSpaceTradersStore((state: any) => state.setAgent);
     const { getAgent } = useQueryAgent();
 
     // If Zustand agent is empty, fetch from API and update Zustand

@@ -29,7 +29,7 @@ const fetchOptions = {
 
 const useQueryShip = (shipSymbol?: string) => {
     const setShipCooldown = useSpaceTradersStore(
-        (state) => state.setShipCooldown,
+        (state: any) => state.setShipCooldown,
     );
 
     const useShipsQuery = () => {

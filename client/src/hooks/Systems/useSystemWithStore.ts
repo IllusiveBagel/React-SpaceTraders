@@ -3,8 +3,8 @@ import { useSpaceTradersStore } from "../../store/spaceTradersStore";
 import { useQuerySystems } from "./";
 
 const useSystemWithStore = (systemSymbol: string) => {
-    const system = useSpaceTradersStore((state) => state.system);
-    const setSystem = useSpaceTradersStore((state) => state.setSystem);
+    const system = useSpaceTradersStore((state: any) => state.system);
+    const setSystem = useSpaceTradersStore((state: any) => state.setSystem);
     const { useGetSystem } = useQuerySystems(systemSymbol);
     const getSystem = useGetSystem();
 

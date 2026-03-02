@@ -15,7 +15,7 @@ const fetchOptions = {
 };
 
 const useQuerySystems = (systemSymbol?: string) => {
-    const setSystem = useSpaceTradersStore((state) => state.setSystem);
+    const setSystem = useSpaceTradersStore((state: any) => state.setSystem);
 
     const useListSystems = ({ page = 1, limit = 20 }: Meta = {} as Meta) => {
         return useQuery({

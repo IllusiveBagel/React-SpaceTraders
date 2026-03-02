@@ -10,8 +10,12 @@ import { useSpaceTradersStore } from "../../store/spaceTradersStore";
 import type { TradeSymbol } from "types/Common";
 
 const useMutateContract = (shipSymbol: string) => {
-    const setContracts = useSpaceTradersStore((state) => state.setContracts);
-    const setShipCargo = useSpaceTradersStore((state) => state.setShipCargo);
+    const setContracts = useSpaceTradersStore(
+        (state: any) => state.setContracts,
+    );
+    const setShipCargo = useSpaceTradersStore(
+        (state: any) => state.setShipCargo,
+    );
 
     const acceptContractMutation = useMutation({
         mutationKey: ["acceptContract"],

@@ -3,8 +3,8 @@ import { useSpaceTradersStore } from "../../store/spaceTradersStore";
 import { useQueryShip } from "./";
 
 const useShipsWithStore = () => {
-    const ships = useSpaceTradersStore((state) => state.ships);
-    const setShips = useSpaceTradersStore((state) => state.setShips);
+    const ships = useSpaceTradersStore((state: any) => state.ships);
+    const setShips = useSpaceTradersStore((state: any) => state.setShips);
     const { useShipsQuery } = useQueryShip();
     const getShips = useShipsQuery();
 

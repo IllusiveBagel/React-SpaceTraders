@@ -13,7 +13,9 @@ const fetchOptions = {
 };
 
 const useQueryContract = (contractId?: string) => {
-    const setContracts = useSpaceTradersStore((state) => state.setContracts);
+    const setContracts = useSpaceTradersStore(
+        (state: any) => state.setContracts,
+    );
 
     const useContractsQuery = () => {
         return useQuery<Contract[]>({

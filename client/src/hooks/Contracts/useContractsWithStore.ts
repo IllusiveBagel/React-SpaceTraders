@@ -3,8 +3,10 @@ import { useSpaceTradersStore } from "../../store/spaceTradersStore";
 import { useQueryContract } from "./";
 
 const useContractsWithStore = () => {
-    const contracts = useSpaceTradersStore((state) => state.contracts);
-    const setContracts = useSpaceTradersStore((state) => state.setContracts);
+    const contracts = useSpaceTradersStore((state: any) => state.contracts);
+    const setContracts = useSpaceTradersStore(
+        (state: any) => state.setContracts,
+    );
     const { useContractsQuery } = useQueryContract();
     const getContracts = useContractsQuery();
 
