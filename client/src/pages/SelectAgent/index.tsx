@@ -11,9 +11,10 @@ import {
 import axiosManager from "services/axiosManager";
 import { clearAgentToken, setAgentToken } from "services/tokenStore";
 
-import { useRegisterAgent } from "hooks/account/useAccountActions";
+import useMutateAccount from "hooks/Account/useMutateAccount";
 
 import styles from "./SelectAgent.module.css";
+import type { FactionSymbol } from "types/Faction";
 
 const normalizeSymbol = (value: string) => value.trim().toUpperCase();
 
@@ -21,11 +22,11 @@ const SelectAgent = () => {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
 
-    const registerAgent = useRegisterAgent();
+    const { registerAgent } = useMutateAccount();
 
     const [showCreate, setShowCreate] = useState(true);
     const [callsign, setCallsign] = useState("");
-    const [faction, setFaction] = useState("COSMIC");
+    const [faction, setFaction] = useState<FactionSymbol>("COSMIC");
     const [existingToken, setExistingToken] = useState("");
     const [formError, setFormError] = useState<string | null>(null);
     const [saveStatus, setSaveStatus] = useState<string | null>(null);
@@ -134,7 +135,7 @@ const SelectAgent = () => {
 
         const payload = {
             symbol: normalizeSymbol(callsign),
-            faction: normalizeSymbol(faction),
+            faction: normalizeSymbol(faction) as FactionSymbol,
         };
 
         if (!payload.symbol) {
@@ -281,7 +282,9 @@ const SelectAgent = () => {
                             id="faction"
                             className={styles.input}
                             value={faction}
-                            onChange={(event) => setFaction(event.target.value)}
+                            onChange={(event) =>
+                                setFaction(event.target.value as FactionSymbol)
+                            }
                             placeholder="e.g. COSMIC"
                         />
                         <button

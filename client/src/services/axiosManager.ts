@@ -1,6 +1,7 @@
 import axios, { type AxiosInstance, type AxiosError } from "axios";
 
-import { getAgentToken } from "services/tokenStore";
+import { getAgentToken } from "./tokenStore";
+import type { Meta } from "types/Common/Meta";
 
 type RuntimeEnv = Record<string, string> | undefined;
 
@@ -30,6 +31,12 @@ type ApiErrorShape = {
     };
     message?: string;
 };
+
+declare module "axios" {
+    export interface AxiosRequestConfig {
+        meta?: Partial<Pick<Meta, "page" | "limit">>;
+    }
+}
 
 const getErrorMessage = (error: unknown) => {
     if (axios.isAxiosError(error)) {
@@ -71,6 +78,23 @@ const createApiClient = (options?: CreateApiClientOptions) => {
         if (token && !config.headers?.Authorization) {
             config.headers = config.headers ?? {};
             config.headers.Authorization = `Bearer ${token}`;
+        }
+
+        if (config.meta) {
+            const { page, limit } = config.meta;
+            const metaParams = {
+                ...(page !== undefined ? { page } : {}),
+                ...(limit !== undefined ? { limit } : {}),
+            };
+
+            if (Object.keys(metaParams).length > 0) {
+                config.params = {
+                    ...(config.params ?? {}),
+                    ...metaParams,
+                };
+            }
+
+            delete config.meta;
         }
 
         return config;

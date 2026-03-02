@@ -11,18 +11,6 @@
     font-size: 0.85rem;
 }
 
-.title {
-    margin: 0;
-    font-size: 1.7rem;
-    color: var(--text-primary);
-}
-
-.symbol {
-    margin: 6px 0 0;
-    color: var(--text-secondary);
-    font-size: 0.95rem;
-}
-
 .status {
     padding: 6px 12px;
     border-radius: 999px;
@@ -62,6 +50,34 @@
 
 .stats > div {
     min-width: 0;
+}
+
+.statLabel {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.statValue {
+    margin: 6px 0 0;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.link {
+    color: var(--text-primary);
+    text-decoration: none;
+}
+
+.link:hover {
+    color: var(--accent);
+}
+
+.link:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
 }
 
 .transitPanel {
@@ -131,18 +147,13 @@
     outline-offset: 2px;
 }
 
-.statLabel {
-    margin: 0;
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-}
-
-.statValue {
-    margin: 6px 0 0;
-    font-size: 1rem;
-    color: var(--text-primary);
+.details {
+    overflow-y: auto;
+    padding-right: 4px;
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    gap: 12px;
 }
 
 @media (max-width: 900px) {
@@ -169,198 +180,5 @@
         font-size: 0.95rem;
         overflow-wrap: anywhere;
         word-break: break-word;
-    }
-}
-
-.link {
-    color: var(--text-primary);
-    text-decoration: none;
-}
-
-.link:hover {
-    color: var(--accent);
-}
-
-.link:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-}
-
-.details {
-    overflow-y: auto;
-    padding-right: 4px;
-    flex: 1;
-    min-height: 0;
-    display: grid;
-    gap: 12px;
-}
-
-.detailsGrid {
-    margin-top: 12px;
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 12px;
-    align-items: start;
-}
-
-.cardsGrid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 12px;
-    align-items: start;
-}
-
-.infoCard {
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 12px;
-    background: var(--surface-soft);
-    display: grid;
-    gap: 6px;
-    min-height: 260px;
-    overflow: auto;
-}
-
-.cardTitle {
-    margin: 0;
-    font-size: 0.95rem;
-    color: var(--text-primary);
-}
-
-.cardMeta {
-    margin: 2px 0 0;
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-}
-
-.detailList {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    gap: 8px;
-    height: calc(100% - 30px);
-    overflow-y: auto;
-}
-
-.detailListItem {
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 8px;
-    background: rgba(15, 23, 42, 0.35);
-}
-
-.detailText {
-    margin: 0 0 6px;
-    color: var(--text-secondary);
-    font-size: 0.88rem;
-    line-height: 1.35;
-}
-
-.cargoPanel {
-    display: grid;
-    gap: 12px;
-}
-
-.cargoHeader {
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 12px 14px;
-    background: var(--surface-soft);
-    display: grid;
-    gap: 10px;
-}
-
-.cargoTitle {
-    margin: 0;
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-}
-
-.cargoNumbers {
-    margin: 6px 0 0;
-    font-size: 1rem;
-    color: var(--text-primary);
-}
-
-.cargoBar {
-    height: 10px;
-    border-radius: 999px;
-    border: 1px solid var(--border);
-    background: rgba(15, 23, 42, 0.6);
-    overflow: hidden;
-}
-
-.cargoFill {
-    height: 100%;
-    background: linear-gradient(90deg, #38bdf8 0%, #60a5fa 100%);
-    transition: width 0.2s ease;
-}
-
-.cargoTableWrapper {
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    background: var(--surface-soft);
-    overflow: auto;
-    max-height: clamp(240px, 45vh, 520px);
-}
-
-.cargoTable {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.88rem;
-}
-
-.cargoTable th {
-    text-align: left;
-    padding: 10px 12px;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-secondary);
-    border-bottom: 1px solid var(--border);
-    background: rgba(15, 23, 42, 0.35);
-    position: sticky;
-    top: 0;
-}
-
-.cargoTable td {
-    padding: 10px 12px;
-    border-bottom: 1px solid rgba(51, 65, 85, 0.6);
-    color: var(--text-primary);
-    vertical-align: top;
-}
-
-.cargoTable tr:last-child td {
-    border-bottom: none;
-}
-
-.cargoItem {
-    font-weight: 600;
-}
-
-.cargoDesc {
-    color: var(--text-secondary);
-}
-
-@media (min-width: 860px) {
-    .detailsGrid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .infoCard {
-        height: 320px;
-    }
-}
-
-@media (min-width: 1260px) {
-    .detailsGrid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .infoCard {
-        height: 340px;
     }
 }

@@ -1,11 +1,14 @@
 import { Link, useNavigate } from "react-router-dom";
 
-import type { Ship } from "types/fleet";
+import useTransitProgress from "hooks/useTransitProgress";
+
+import { formatDuration, formatPercent } from "helpers/fleetFormatters";
+
+import ProgressBar from "components/Common/ProgressBar";
+
+import type { Ship } from "types/Ship";
 
 import styles from "./ShipCard.module.css";
-import { formatDuration, formatPercent } from "helpers/fleetFormatters";
-import ProgressBar from "components/Common/ProgressBar";
-import useTransitProgress from "hooks/fleet/useTransitProgress";
 
 type ShipCardProps = {
     ship: Ship;
@@ -78,14 +81,6 @@ const ShipCard = ({ ship }: ShipCardProps) => {
                     <span className={styles.value}>
                         {ship.cargo.units}/{ship.cargo.capacity} (
                         {formatPercent(ship.cargo.units, ship.cargo.capacity)})
-                    </span>
-                </div>
-                <div className={styles.metric}>
-                    <span className={styles.label}>Cooldown</span>
-                    <span className={styles.value}>
-                        {ship.cooldown.remainingSeconds > 0
-                            ? `${ship.cooldown.remainingSeconds}s`
-                            : "Ready"}
                     </span>
                 </div>
                 <div className={styles.metric}>

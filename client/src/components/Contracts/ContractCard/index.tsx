@@ -1,28 +1,18 @@
-import { useEffect, useMemo, useState } from "react";
-
-import type { Contract } from "types/contract";
-import type { Ship } from "types/fleet";
+import type { Contract } from "types/Contract";
 import styles from "./ContractCard.module.css";
 import ProgressBar from "components/Common/ProgressBar";
-import useGetShips from "hooks/fleet/useGetShips";
-import useContractActions from "hooks/contracts/useContractActions";
 import { formatDateTime } from "helpers/fleetFormatters";
+import useMutateContract from "hooks/Contracts/useMutateContract";
 
 type ContractCardProps = {
+    shipSymbol: string;
     contract: Contract;
 };
 
-const ContractCard = ({ contract }: ContractCardProps) => {
-    const { data: ships, isLoading: shipsLoading } = useGetShips();
-    const { accept, deliver, fulfill, isWorking } = useContractActions(
-        contract.id,
-    );
-    const [selectedShipSymbol, setSelectedShipSymbol] = useState("");
-    const [deliveryUnits, setDeliveryUnits] = useState<Record<string, string>>(
-        {},
-    );
-    const [actionMessage, setActionMessage] = useState<string | null>(null);
-    const [actionError, setActionError] = useState<string | null>(null);
+const ContractCard = ({ shipSymbol, contract }: ContractCardProps) => {
+    const { acceptContract: accept, fulfillContract: fulfill } =
+        useMutateContract(shipSymbol);
+
     const statusColor = contract.fulfilled
         ? styles.statusFulfilled
         : contract.accepted
@@ -31,135 +21,7 @@ const ContractCard = ({ contract }: ContractCardProps) => {
     const deliveriesComplete = contract.terms.deliver.every(
         (delivery) => delivery.unitsFulfilled >= delivery.unitsRequired,
     );
-    const defaultShipSymbol = useMemo(() => ships?.[0]?.symbol ?? "", [ships]);
-    const selectedShip = useMemo<Ship | undefined>(
-        () => ships?.find((ship) => ship.symbol === selectedShipSymbol),
-        [ships, selectedShipSymbol],
-    );
-    const actionDisabled = isWorking || shipsLoading;
-
-    useEffect(() => {
-        if (!selectedShipSymbol && defaultShipSymbol) {
-            setSelectedShipSymbol(defaultShipSymbol);
-        }
-    }, [defaultShipSymbol, selectedShipSymbol]);
-
-    const handleAction = async (
-        action: () => Promise<unknown>,
-        message: string,
-    ) => {
-        setActionError(null);
-        setActionMessage(null);
-
-        try {
-            await action();
-            setActionMessage(message);
-        } catch (err) {
-            setActionError(
-                err instanceof Error ? err.message : "Action failed.",
-            );
-        }
-    };
-
-    const getAvailableUnits = (tradeSymbol: string) => {
-        if (!selectedShip) {
-            return 0;
-        }
-
-        return (
-            selectedShip.cargo.inventory.find(
-                (item) => item.symbol === tradeSymbol,
-            )?.units ?? 0
-        );
-    };
-
-    const handleDeliver = async (
-        delivery: Contract["terms"]["deliver"][number],
-        key: string,
-    ) => {
-        if (!contract.accepted) {
-            setActionError("Accept the contract before delivering cargo.");
-            return;
-        }
-
-        if (contract.fulfilled) {
-            setActionError("Contract already fulfilled.");
-            return;
-        }
-
-        if (!selectedShipSymbol) {
-            setActionError("Select a ship to deliver cargo.");
-            return;
-        }
-
-        const remainingUnits = Math.max(
-            0,
-            delivery.unitsRequired - delivery.unitsFulfilled,
-        );
-        if (remainingUnits === 0) {
-            setActionError("Delivery already completed.");
-            return;
-        }
-
-        const availableUnits = getAvailableUnits(delivery.tradeSymbol);
-        if (availableUnits === 0) {
-            setActionError(
-                `Selected ship has no ${delivery.tradeSymbol} cargo.`,
-            );
-            return;
-        }
-
-        const desiredUnits = deliveryUnits[key]?.trim();
-        const resolvedUnits = desiredUnits
-            ? Number(desiredUnits)
-            : Math.min(availableUnits, remainingUnits);
-
-        if (!resolvedUnits || Number.isNaN(resolvedUnits)) {
-            setActionError("Enter a valid unit count to deliver.");
-            return;
-        }
-
-        const maxUnits = Math.min(availableUnits, remainingUnits);
-        if (resolvedUnits > maxUnits) {
-            setActionError(
-                `Max deliverable units: ${maxUnits} (available ${availableUnits}, remaining ${remainingUnits}).`,
-            );
-            return;
-        }
-
-        await handleAction(
-            () =>
-                deliver({
-                    shipSymbol: selectedShipSymbol,
-                    tradeSymbol: delivery.tradeSymbol,
-                    units: resolvedUnits,
-                }),
-            `Delivering ${resolvedUnits} ${delivery.tradeSymbol}.`,
-        );
-    };
-
-    const handleFulfill = async () => {
-        if (!contract.accepted) {
-            setActionError("Accept the contract before fulfilling it.");
-            return;
-        }
-
-        if (!deliveriesComplete) {
-            setActionError("All deliveries must be completed first.");
-            return;
-        }
-
-        await handleAction(() => fulfill(), "Contract fulfilled.");
-    };
-
-    const handleAccept = async () => {
-        if (contract.accepted) {
-            setActionError("Contract already accepted.");
-            return;
-        }
-
-        await handleAction(() => accept(), "Contract accepted.");
-    };
+    const actionDisabled = accept.isPending || fulfill.isPending;
 
     return (
         <div className={styles.card}>
@@ -262,35 +124,19 @@ const ContractCard = ({ contract }: ContractCardProps) => {
                     <div className={styles.actionHeader}>
                         <span className={styles.sectionLabel}>Actions</span>
                         <div className={styles.actionStatus}>
-                            {actionError && (
-                                <span className={styles.actionError}>
-                                    {actionError}
+                            {accept.error && (
+                                <span className={styles.actionMessage}>
+                                    {accept.error?.message ||
+                                        "Error accepting contract"}
                                 </span>
                             )}
-                            {actionMessage && (
+                            {fulfill.error && (
                                 <span className={styles.actionMessage}>
-                                    {actionMessage}
+                                    {fulfill.error?.message ||
+                                        "Error fulfilling contract"}
                                 </span>
                             )}
                         </div>
-                    </div>
-
-                    <div className={styles.actionRow}>
-                        <label className={styles.actionLabel}>Ship</label>
-                        <select
-                            value={selectedShipSymbol}
-                            onChange={(event) =>
-                                setSelectedShipSymbol(event.target.value)
-                            }
-                            disabled={actionDisabled}
-                        >
-                            <option value="">Select ship</option>
-                            {(ships ?? []).map((ship) => (
-                                <option key={ship.symbol} value={ship.symbol}>
-                                    {ship.registration.name} ({ship.symbol})
-                                </option>
-                            ))}
-                        </select>
                     </div>
 
                     {!contract.accepted && (
@@ -303,74 +149,17 @@ const ContractCard = ({ contract }: ContractCardProps) => {
                         <button
                             type="button"
                             className={styles.actionPrimary}
-                            onClick={handleAccept}
+                            onClick={() => accept.mutate(contract.id)}
                             disabled={actionDisabled}
                         >
                             Accept contract
                         </button>
                     )}
 
-                    <div className={styles.deliveryActions}>
-                        {contract.terms.deliver.map((delivery, idx) => {
-                            const key = `${delivery.tradeSymbol}-${idx}`;
-                            const remainingUnits = Math.max(
-                                0,
-                                delivery.unitsRequired -
-                                    delivery.unitsFulfilled,
-                            );
-                            const availableUnits = getAvailableUnits(
-                                delivery.tradeSymbol,
-                            );
-
-                            return (
-                                <div
-                                    key={key}
-                                    className={styles.deliveryAction}
-                                >
-                                    <div className={styles.deliveryActionMeta}>
-                                        <span>
-                                            {delivery.tradeSymbol} to{" "}
-                                            {delivery.destinationSymbol}
-                                        </span>
-                                        <span>Remaining: {remainingUnits}</span>
-                                        <span>Available: {availableUnits}</span>
-                                    </div>
-                                    <div className={styles.actionRow}>
-                                        <input
-                                            type="number"
-                                            min={1}
-                                            placeholder={`${Math.min(
-                                                remainingUnits,
-                                                availableUnits,
-                                            )}`}
-                                            value={deliveryUnits[key] ?? ""}
-                                            onChange={(event) =>
-                                                setDeliveryUnits((current) => ({
-                                                    ...current,
-                                                    [key]: event.target.value,
-                                                }))
-                                            }
-                                            disabled={actionDisabled}
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                handleDeliver(delivery, key)
-                                            }
-                                            disabled={actionDisabled}
-                                        >
-                                            Deliver
-                                        </button>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-
                     <button
                         type="button"
                         className={styles.actionPrimary}
-                        onClick={handleFulfill}
+                        onClick={() => fulfill.mutate(contract.id)}
                         disabled={
                             actionDisabled ||
                             !contract.accepted ||

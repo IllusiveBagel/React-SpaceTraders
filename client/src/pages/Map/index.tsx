@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
-import useGetShips from "hooks/fleet/useGetShips";
-import useGetSystem from "hooks/systems/useGetSystem";
-import { usePageTitle } from "components/Layout/PageTitleContext";
+import { useShipsWithStore } from "hooks/Ship";
+import { useWaypointsWithStore } from "hooks/Systems";
 
 import styles from "./Map.module.css";
+import type { Waypoint } from "types/Waypoint";
+import type { Ship } from "types/Ship";
 
 type WaypointPoint = {
     symbol: string;
@@ -16,24 +17,87 @@ type WaypointPoint = {
     yPercent: number;
 };
 
+type WaypointBounds = {
+    minX: number;
+    maxX: number;
+    minY: number;
+    maxY: number;
+};
+
 const MAP_PADDING_PERCENT = 12;
 const MIN_SCALE = 0.6;
 const MAX_SCALE = 2.5;
 const ZOOM_STEP = 0.12;
 
-const Map = () => {
-    usePageTitle("Map");
+const RESOURCE_TRAITS = new Set([
+    "MINERAL_DEPOSITS",
+    "COMMON_METAL_DEPOSITS",
+    "PRECIOUS_METAL_DEPOSITS",
+    "RARE_METAL_DEPOSITS",
+    "METHANE_POOLS",
+    "ICE_CRYSTALS",
+    "EXPLOSIVE_GASES",
+]);
 
-    const { data: ships, isLoading, error } = useGetShips();
+const MARKET_TRAITS = new Set([
+    "MARKETPLACE",
+    "SHIPYARD",
+    "TRADING_HUB",
+    "BLACK_MARKET",
+    "INDUSTRIAL",
+    "HIGH_TECH",
+]);
+
+const SETTLEMENT_TRAITS = new Set([
+    "OUTPOST",
+    "SCATTERED_SETTLEMENTS",
+    "SPRAWLING_CITIES",
+    "MEGA_STRUCTURES",
+    "OVERCROWDED",
+]);
+
+const HAZARD_TRAITS = new Set([
+    "TOXIC_ATMOSPHERE",
+    "CORROSIVE_ATMOSPHERE",
+    "EXTREME_TEMPERATURES",
+    "EXTREME_PRESSURE",
+    "CRUSHING_GRAVITY",
+    "STRONG_GRAVITY",
+    "WEAK_GRAVITY",
+    "MICRO_GRAVITY_ANOMALIES",
+    "UNSTABLE_COMPOSITION",
+    "ASH_CLOUDS",
+    "SUPERVOLCANOES",
+    "MAGMA_SEAS",
+    "RADIOACTIVE",
+]);
+
+const SPECIAL_TRAITS = new Set([
+    "UNCHARTED",
+    "UNDER_CONSTRUCTION",
+    "PIRATE_BASE",
+    "RESEARCH_FACILITY",
+    "MILITARY_BASE",
+    "SURVEILLANCE_OUTPOST",
+    "EXPLORATION_OUTPOST",
+    "DEBRIS_CLUSTER",
+    "VAST_RUINS",
+]);
+
+const Map = () => {
+    const { ships, isLoading, error } = useShipsWithStore();
+
     const [selectedShipSymbol, setSelectedShipSymbol] = useState("");
     const [scale, setScale] = useState(1);
     const [translate, setTranslate] = useState({ x: 0, y: 0 });
+    const [isWaypointMenuOpen, setIsWaypointMenuOpen] = useState(true);
     const [hoveredWaypointSymbol, setHoveredWaypointSymbol] = useState<
         string | null
     >(null);
     const [hoveredShipSymbol, setHoveredShipSymbol] = useState<string | null>(
         null,
     );
+
     const dragState = useRef({
         active: false,
         startX: 0,
@@ -46,9 +110,8 @@ const Map = () => {
         if (!ships || ships.length === 0) {
             return [] as string[];
         }
-
         const unique = new Set<string>();
-        ships.forEach((ship) => unique.add(ship.nav.systemSymbol));
+        ships.forEach((ship: Ship) => unique.add(ship.nav.systemSymbol));
         return Array.from(unique);
     }, [ships]);
 
@@ -58,13 +121,12 @@ const Map = () => {
         if (!hasMultipleSystems) {
             return;
         }
-
         if (!ships || ships.length === 0) {
             return;
         }
 
         const selectedStillValid = ships.some(
-            (ship) => ship.symbol === selectedShipSymbol,
+            (ship: Ship) => ship.symbol === selectedShipSymbol,
         );
 
         if (!selectedShipSymbol || !selectedStillValid) {
@@ -77,7 +139,7 @@ const Map = () => {
             return undefined;
         }
 
-        return ships.find((ship) => ship.symbol === selectedShipSymbol);
+        return ships.find((ship: Ship) => ship.symbol === selectedShipSymbol);
     }, [ships, selectedShipSymbol]);
 
     const activeSystemSymbol = hasMultipleSystems
@@ -85,15 +147,64 @@ const Map = () => {
         : ships?.[0]?.nav.systemSymbol;
 
     const {
-        data: system,
-        isLoading: systemLoading,
-        error: systemError,
-    } = useGetSystem(activeSystemSymbol);
+        waypoints,
+        isLoading: waypointsLoading,
+        error: waypointsError,
+    } = useWaypointsWithStore(activeSystemSymbol);
 
-    const waypoints = system?.waypoints ?? [];
+    const safeWaypoints = waypoints ?? [];
+
+    const sortedWaypoints = useMemo(() => {
+        return [...safeWaypoints].sort((a, b) =>
+            a.symbol.localeCompare(b.symbol),
+        );
+    }, [safeWaypoints]);
+
+    const formatTraitLabel = (trait: string) => trait.replace(/_/g, " ");
+
+    const normalizeWaypointTraits = (traits: unknown) => {
+        if (!Array.isArray(traits)) {
+            return [] as string[];
+        }
+
+        return traits
+            .map((trait) => {
+                if (typeof trait === "string") {
+                    return trait;
+                }
+
+                const traitObj = trait as { symbol?: string; name?: string };
+                return traitObj.symbol ?? traitObj.name ?? "";
+            })
+            .filter((trait) => trait.length > 0);
+    };
+
+    const getTraitClass = (trait: string) => {
+        if (RESOURCE_TRAITS.has(trait)) {
+            return styles.traitTagResource;
+        }
+
+        if (MARKET_TRAITS.has(trait)) {
+            return styles.traitTagMarket;
+        }
+
+        if (SETTLEMENT_TRAITS.has(trait)) {
+            return styles.traitTagSettlement;
+        }
+
+        if (HAZARD_TRAITS.has(trait)) {
+            return styles.traitTagHazard;
+        }
+
+        if (SPECIAL_TRAITS.has(trait)) {
+            return styles.traitTagSpecial;
+        }
+
+        return styles.traitTagNeutral;
+    };
 
     const bounds = useMemo(() => {
-        if (waypoints.length === 0) {
+        if (safeWaypoints.length === 0) {
             return {
                 minX: 0,
                 maxX: 0,
@@ -102,8 +213,8 @@ const Map = () => {
             };
         }
 
-        return waypoints.reduce(
-            (acc, waypoint) => {
+        return safeWaypoints.reduce(
+            (acc: WaypointBounds, waypoint: Waypoint) => {
                 acc.minX = Math.min(acc.minX, waypoint.x);
                 acc.maxX = Math.max(acc.maxX, waypoint.x);
                 acc.minY = Math.min(acc.minY, waypoint.y);
@@ -111,16 +222,16 @@ const Map = () => {
                 return acc;
             },
             {
-                minX: waypoints[0].x,
-                maxX: waypoints[0].x,
-                minY: waypoints[0].y,
-                maxY: waypoints[0].y,
-            },
+                minX: safeWaypoints[0].x,
+                maxX: safeWaypoints[0].x,
+                minY: safeWaypoints[0].y,
+                maxY: safeWaypoints[0].y,
+            } as WaypointBounds,
         );
-    }, [waypoints]);
+    }, [safeWaypoints]);
 
     const waypointPoints = useMemo(() => {
-        if (waypoints.length === 0) {
+        if (safeWaypoints.length === 0) {
             return [] as WaypointPoint[];
         }
 
@@ -128,7 +239,7 @@ const Map = () => {
         const spanY = Math.max(1, bounds.maxY - bounds.minY);
         const usablePercent = 100 - MAP_PADDING_PERCENT * 2;
 
-        return waypoints.map((waypoint) => {
+        return safeWaypoints.map((waypoint: Waypoint) => {
             const normalizedX = (waypoint.x - bounds.minX) / spanX;
             const normalizedY = (waypoint.y - bounds.minY) / spanY;
             const xPercent = MAP_PADDING_PERCENT + normalizedX * usablePercent;
@@ -144,10 +255,10 @@ const Map = () => {
                 yPercent,
             };
         });
-    }, [bounds, waypoints]);
+    }, [bounds, safeWaypoints]);
 
     const shipMarkers = useMemo(() => {
-        if (!ships || !activeSystemSymbol || waypointPoints.length === 0) {
+        if (!ships || !activeSystemSymbol || safeWaypoints.length === 0) {
             return [] as {
                 symbol: string;
                 name: string;
@@ -158,12 +269,12 @@ const Map = () => {
             }[];
         }
 
-        const pointsBySymbol = new globalThis.Map(
-            waypointPoints.map((point) => [point.symbol, point]),
+        const pointsBySymbol = new globalThis.Map<string, WaypointPoint>(
+            waypointPoints.map((point: WaypointPoint) => [point.symbol, point]),
         );
         const shipsByWaypoint = new globalThis.Map<string, typeof ships>();
 
-        ships.forEach((ship) => {
+        ships.forEach((ship: Ship) => {
             if (ship.nav.systemSymbol !== activeSystemSymbol) {
                 return;
             }
@@ -190,7 +301,7 @@ const Map = () => {
             }
 
             const count = group.length;
-            group.forEach((ship, index) => {
+            group.forEach((ship: Ship, index: number) => {
                 const angle = count > 1 ? (index / count) * Math.PI * 2 : 0;
                 const radius = count > 1 ? 10 : 0;
                 markers.push({
@@ -211,7 +322,8 @@ const Map = () => {
         () =>
             hoveredWaypointSymbol
                 ? waypointPoints.find(
-                      (point) => point.symbol === hoveredWaypointSymbol,
+                      (point: WaypointPoint) =>
+                          point.symbol === hoveredWaypointSymbol,
                   )
                 : undefined,
         [hoveredWaypointSymbol, waypointPoints],
@@ -233,7 +345,7 @@ const Map = () => {
         }
 
         return ships.filter(
-            (ship) => ship.nav.systemSymbol === activeSystemSymbol,
+            (ship: Ship) => ship.nav.systemSymbol === activeSystemSymbol,
         ).length;
     }, [ships, activeSystemSymbol]);
 
@@ -242,12 +354,12 @@ const Map = () => {
         error ||
         (!isLoading && !error && (!ships || ships.length === 0));
     const showSystemState =
-        systemLoading ||
-        systemError ||
-        (!systemLoading &&
-            !systemError &&
+        waypointsLoading ||
+        waypointsError ||
+        (!waypointsLoading &&
+            !waypointsError &&
             activeSystemSymbol &&
-            waypoints.length === 0);
+            safeWaypoints.length === 0);
     const showStatus = showShipState || showSystemState;
 
     useEffect(() => {
@@ -388,7 +500,7 @@ const Map = () => {
                             </Link>
                         </div>
                     ))}
-                    {waypointPoints.map((point) => (
+                    {waypointPoints.map((point: WaypointPoint) => (
                         <div
                             key={point.symbol}
                             className={styles.waypoint}
@@ -444,6 +556,113 @@ const Map = () => {
             </div>
 
             <div className={styles.overlay}>
+                {activeSystemSymbol && !waypointsLoading && !waypointsError && (
+                    <section
+                        className={`${styles.waypointPanel} ${
+                            isWaypointMenuOpen
+                                ? styles.waypointPanelOpen
+                                : styles.waypointPanelClosed
+                        }`}
+                    >
+                        <header className={styles.waypointPanelHeader}>
+                            <div>
+                                <p className={styles.waypointPanelTitle}>
+                                    Waypoints
+                                </p>
+                                <p className={styles.waypointPanelMeta}>
+                                    {activeSystemSymbol}
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                className={styles.waypointToggle}
+                                onClick={() =>
+                                    setIsWaypointMenuOpen((current) => !current)
+                                }
+                                aria-expanded={isWaypointMenuOpen}
+                                aria-controls="map-waypoint-list"
+                            >
+                                {isWaypointMenuOpen ? "Hide" : "Show"}
+                            </button>
+                        </header>
+                        {isWaypointMenuOpen && (
+                            <div
+                                className={styles.waypointPanelBody}
+                                id="map-waypoint-list"
+                            >
+                                {sortedWaypoints.length === 0 ? (
+                                    <p className={styles.waypointEmpty}>
+                                        No waypoints reported.
+                                    </p>
+                                ) : (
+                                    <ul className={styles.waypointList}>
+                                        {sortedWaypoints.map(
+                                            (waypoint: Waypoint) => {
+                                                const traits =
+                                                    normalizeWaypointTraits(
+                                                        waypoint.traits,
+                                                    );
+
+                                                return (
+                                                    <li
+                                                        key={waypoint.symbol}
+                                                        className={
+                                                            styles.waypointItem
+                                                        }
+                                                    >
+                                                        <Link
+                                                            to={`/systems/${activeSystemSymbol}/waypoints/${waypoint.symbol}`}
+                                                            className={
+                                                                styles.waypointItemLink
+                                                            }
+                                                        >
+                                                            <span>
+                                                                {
+                                                                    waypoint.symbol
+                                                                }
+                                                            </span>
+                                                            <span
+                                                                className={
+                                                                    styles.waypointType
+                                                                }
+                                                            >
+                                                                {waypoint.type}
+                                                            </span>
+                                                        </Link>
+                                                        {traits.length > 0 && (
+                                                            <div
+                                                                className={
+                                                                    styles.traitTags
+                                                                }
+                                                            >
+                                                                {traits.map(
+                                                                    (trait) => (
+                                                                        <span
+                                                                            key={`${waypoint.symbol}-${trait}`}
+                                                                            className={`${
+                                                                                styles.traitTag
+                                                                            } ${getTraitClass(
+                                                                                trait,
+                                                                            )}`}
+                                                                        >
+                                                                            {formatTraitLabel(
+                                                                                trait,
+                                                                            )}
+                                                                        </span>
+                                                                    ),
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </li>
+                                                );
+                                            },
+                                        )}
+                                    </ul>
+                                )}
+                            </div>
+                        )}
+                    </section>
+                )}
                 {hasMultipleSystems && (
                     <header className={styles.header}>
                         <div className={styles.selector}>
@@ -461,7 +680,7 @@ const Map = () => {
                                     isLoading || (ships?.length ?? 0) === 0
                                 }
                             >
-                                {(ships ?? []).map((ship) => (
+                                {(ships ?? []).map((ship: Ship) => (
                                     <option
                                         key={ship.symbol}
                                         value={ship.symbol}
@@ -474,7 +693,7 @@ const Map = () => {
                     </header>
                 )}
 
-                {activeSystemSymbol && !systemLoading && !systemError && (
+                {activeSystemSymbol && !waypointsLoading && !waypointsError && (
                     <div className={styles.meta}>
                         <div>
                             <p className={styles.metaLabel}>System</p>
@@ -497,7 +716,7 @@ const Map = () => {
                         <div>
                             <p className={styles.metaLabel}>Waypoints</p>
                             <p className={styles.metaValue}>
-                                {waypoints.length}
+                                {safeWaypoints.length}
                             </p>
                         </div>
                     </div>
@@ -522,21 +741,21 @@ const Map = () => {
                                 </p>
                             )}
 
-                        {systemLoading && (
+                        {waypointsLoading && (
                             <p className={styles.state}>
                                 Loading system map...
                             </p>
                         )}
-                        {systemError && (
+                        {waypointsError && (
                             <p className={styles.error}>
-                                Error loading system: {systemError.message}
+                                Error loading system: {waypointsError.message}
                             </p>
                         )}
 
-                        {!systemLoading &&
-                            !systemError &&
+                        {!waypointsLoading &&
+                            !waypointsError &&
                             activeSystemSymbol &&
-                            waypoints.length === 0 && (
+                            safeWaypoints.length === 0 && (
                                 <p className={styles.state}>
                                     No waypoints reported for this system.
                                 </p>
@@ -544,11 +763,15 @@ const Map = () => {
                     </div>
                 )}
 
-                {!systemLoading &&
-                    !systemError &&
+                {!waypointsLoading &&
+                    !waypointsError &&
                     activeSystemSymbol &&
-                    waypoints.length > 0 && (
+                    safeWaypoints.length > 0 && (
                         <div className={styles.legend}>
+                            <div>
+                                <span className={styles.shipDot} />
+                                <span>Ship</span>
+                            </div>
                             <div>
                                 <span className={styles.legendDot} />
                                 <span>Waypoint</span>

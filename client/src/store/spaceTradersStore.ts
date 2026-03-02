@@ -1,46 +1,69 @@
 import { create } from "zustand";
+import { devtools } from "zustand/middleware";
 
-// Types for ship, contract, and fleet data (import or define as needed)
-import type { Ship } from "../types/fleet";
-import type { Contract } from "../types/contract";
+import type { Ship, ShipNav, ShipCargo, ShipFuel } from "types/Ship";
+import type { Agent } from "types/Agent";
+import type { Cooldown } from "types/Cooldown";
+import type { Contract } from "types/Contract/Contract";
+import type { Waypoint } from "types/Waypoint";
+import type { System } from "types/System";
 
 interface SpaceTradersState {
-    ships: Ship[];
+    agent: Agent;
     contracts: Contract[];
-    fleet: Ship[]; // Adjust if fleet is a different type
-    cooldowns: Record<string, number>; // shipId -> cooldown seconds
-    setShips: (ships: Ship[]) => void;
+    system: System;
+    ships: Ship[];
+    setAgent: (agent: Agent) => void;
     setContracts: (contracts: Contract[]) => void;
-    setFleet: (fleet: Ship[]) => void;
-    setCooldown: (shipId: string, cooldown: number) => void;
-    decrementCooldowns: () => void;
+    setSystem: (system: System) => void;
+    setSystemWaypoints: (waypoints: Waypoint[]) => void;
+    setShips: (ships: Ship[]) => void;
+    setShipNav: (shipSymbol: string, nav: ShipNav) => void;
+    setShipFuel: (shipSymbol: string, fuel: ShipFuel) => void;
+    setShipCargo: (shipSymbol: string, cargo: ShipCargo) => void;
+    setShipCooldown: (shipSymbol: string, cooldown: Cooldown) => void;
 }
 
-export const useSpaceTradersStore = create<SpaceTradersState>((set) => ({
-    ships: [],
-    contracts: [],
-    fleet: [],
-    cooldowns: {},
-    setShips: (ships: Ship[]) => set({ ships }),
-    setContracts: (contracts: Contract[]) => set({ contracts }),
-    setFleet: (fleet: Ship[]) => set({ fleet }),
-    setCooldown: (shipId: string, cooldown: number) =>
-        set((state) => ({
-            cooldowns: { ...state.cooldowns, [shipId]: cooldown },
-        })),
-    decrementCooldowns: () =>
-        set((state) => {
-            const updated = { ...state.cooldowns };
-            Object.keys(updated).forEach((id) => {
-                if (updated[id] > 0) updated[id] -= 1;
-            });
-            return { cooldowns: updated };
-        }),
-}));
+export const useSpaceTradersStore = create(
+    devtools((set) => ({
+        // Store
+        agent: {} as Agent,
+        contracts: [] as Contract[],
+        system: {} as System,
+        ships: [] as Ship[],
 
-// Optionally, set up an interval to decrement cooldowns globally
-if (typeof window !== "undefined") {
-    setInterval(() => {
-        useSpaceTradersStore.getState().decrementCooldowns();
-    }, 1000);
-}
+        // Actions
+        setAgent: (agent: Agent) => set({ agent }),
+        setContracts: (contracts: Contract[]) => set({ contracts }),
+        setSystem: (system: System) => set({ system }),
+        setSystemWaypoints: (waypoints: Waypoint[]) =>
+            set((state: SpaceTradersState) => ({
+                system: { ...state.system, waypoints },
+            })),
+        setShips: (ships: Ship[]) => set({ ships }),
+        setShipNav: (shipSymbol: string, nav: ShipNav) =>
+            set((state: SpaceTradersState) => ({
+                ships: state.ships.map((ship) =>
+                    ship.symbol === shipSymbol ? { ...ship, nav } : ship,
+                ),
+            })),
+        setShipFuel: (shipSymbol: string, fuel: ShipFuel) =>
+            set((state: SpaceTradersState) => ({
+                ships: state.ships.map((ship) =>
+                    ship.symbol === shipSymbol ? { ...ship, fuel } : ship,
+                ),
+            })),
+        setShipCargo: (shipSymbol: string, cargo: ShipCargo) =>
+            set((state: SpaceTradersState) => ({
+                ships: state.ships.map((ship) =>
+                    ship.symbol === shipSymbol ? { ...ship, cargo } : ship,
+                ),
+            })),
+        setShipCooldown: (shipSymbol: string, cooldown: Cooldown) =>
+            set((state: SpaceTradersState) => ({
+                ships: state.ships.map((ship) =>
+                    ship.symbol === shipSymbol ? { ...ship, cooldown } : ship,
+                ),
+            })),
+    })),
+);
