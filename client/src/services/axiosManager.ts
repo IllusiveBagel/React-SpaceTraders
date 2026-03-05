@@ -1,6 +1,7 @@
 import axios, { type AxiosInstance, type AxiosError } from "axios";
 
 import { getAgentToken } from "./tokenStore";
+import { showToast } from "store/toastStore";
 import type { Meta } from "types/Common/Meta";
 
 type RuntimeEnv = Record<string, string> | undefined;
@@ -103,6 +104,10 @@ const createApiClient = (options?: CreateApiClientOptions) => {
     client.interceptors.response.use(
         (response) => response,
         (error) => {
+            if (axios.isAxiosError(error) && error.code === "ERR_CANCELED") {
+                return Promise.reject(error);
+            }
+
             const { message, status, data } = getErrorMessage(error);
             const formattedError = new Error(message) as Error & {
                 status?: number;
@@ -111,6 +116,8 @@ const createApiClient = (options?: CreateApiClientOptions) => {
 
             formattedError.status = status;
             formattedError.data = data;
+
+            showToast(message, "error");
 
             return Promise.reject(formattedError);
         },
