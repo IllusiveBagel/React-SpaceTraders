@@ -19,6 +19,7 @@ import {
     shipRefine,
     sellCargo,
     patchShipNav,
+    shipRefuel,
 } from "services/Ship/shipMutationService";
 import type { Survey } from "types/Survey";
 import type {
@@ -325,6 +326,22 @@ const useMutateShip = (shipSymbol?: string) => {
         },
     });
 
+    const shipRefuelMutation = useMutation({
+        mutationKey: ["refuelShip", shipSymbol],
+        mutationFn: async () => {
+            if (!shipSymbol) {
+                throw new Error("Ship symbol is required to refuel");
+            }
+            const response = await shipRefuel(shipSymbol);
+            setShipFuel(shipSymbol, response.data.data.fuel);
+            setShipCooldown(shipSymbol, response.data.data.cooldown);
+            return response.data.data as {
+                fuel: ShipFuel;
+                cooldown: Cooldown;
+            };
+        },
+    });
+
     const sellCargoMutation = useMutation({
         mutationKey: ["sellCargo", shipSymbol],
         mutationFn: async ({
@@ -385,6 +402,7 @@ const useMutateShip = (shipSymbol?: string) => {
         orbitShip: orbitShipMutation,
         purchaseCargo: purchaseCargoMutation,
         shipRefine: shipRefineMutation,
+        shipRefuel: shipRefuelMutation,
         sellCargo: sellCargoMutation,
         patchShipNav: patchShipNavMutation,
     };

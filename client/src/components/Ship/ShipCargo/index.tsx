@@ -1,11 +1,14 @@
 import type { Ship } from "types/Ship";
 
 import { useMutateShip } from "hooks/Ship";
+import { useContractsWithStore, useMutateContract } from "hooks/Contracts";
 
 import styles from "./ShipCargo.module.css";
 
 const ShipCargo = ({ ship }: { ship: Ship }) => {
     const { jettisonCargo, sellCargo } = useMutateShip(ship.symbol);
+    const { deliverCargoToContract } = useMutateContract(ship.symbol);
+    const { contracts } = useContractsWithStore();
 
     const cargoPercent = ship
         ? ship.cargo.capacity > 0
@@ -87,6 +90,22 @@ const ShipCargo = ({ ship }: { ship: Ship }) => {
                                             }
                                         >
                                             Jettison
+                                        </button>
+                                        <button
+                                            type="button"
+                                            disabled={
+                                                ship.nav.status !== "DOCKED"
+                                            }
+                                            onClick={() =>
+                                                deliverCargoToContract.mutate({
+                                                    contractId:
+                                                        contracts[0]?.id,
+                                                    tradeSymbol: item.symbol,
+                                                    units: item.units,
+                                                })
+                                            }
+                                        >
+                                            Deliver
                                         </button>
                                     </td>
                                 </tr>

@@ -113,14 +113,6 @@ const ShipPage = () => {
                         {ship.crew.capacity}
                     </p>
                 </div>
-                {/*                 <div>
-                    <p className={styles.statLabel}>Cooldown</p>
-                    <p className={styles.statValue}>
-                        {ship.cooldown.remainingSeconds > 0
-                            ? `${ship.cooldown.remainingSeconds}s`
-                            : "Ready"}
-                    </p>
-                </div> */}
             </div>
 
             {transit.isInTransit && (

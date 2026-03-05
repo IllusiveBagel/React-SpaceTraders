@@ -37,6 +37,7 @@ const ShipControls = ({ ship }: { ship: Ship }) => {
         navigateShip,
         dockShip,
         orbitShip,
+        shipRefuel,
     } = useMutateShip(ship?.symbol);
     const { remainingSeconds, refetchCooldown } = useCooldownProgress(
         ship?.symbol,
@@ -174,6 +175,18 @@ const ShipControls = ({ ship }: { ship: Ship }) => {
                         }
                     >
                         {ship?.nav.status === "IN_ORBIT" ? "Dock" : "Orbit"}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            shipRefuel.mutate();
+                        }}
+                        disabled={
+                            ship?.nav.status !== "DOCKED" ||
+                            shipRefuel.isPending
+                        }
+                    >
+                        Refuel
                     </button>
                 </div>
             </Card>

@@ -95,6 +95,10 @@ const shipRefine = (shipSymbol: string, produceSymbol: Produce) => {
     });
 };
 
+const shipRefuel = (shipSymbol: string) => {
+    return axiosManager.post(`/my/ships/${shipSymbol}/refuel`);
+};
+
 const sellCargo = (shipSymbol: string, symbol: TradeSymbol, units: number) => {
     return axiosManager.post(`/my/ships/${shipSymbol}/sell`, {
         symbol,
@@ -126,6 +130,7 @@ export {
     orbitShip,
     purchaseCargo,
     shipRefine,
+    shipRefuel,
     sellCargo,
     patchShipNav,
 };

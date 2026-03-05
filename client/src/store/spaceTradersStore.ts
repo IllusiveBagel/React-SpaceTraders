@@ -6,6 +6,7 @@ import type { Cooldown } from "types/Cooldown";
 import type { Contract } from "types/Contract/Contract";
 import type { Waypoint } from "types/Waypoint";
 import type { System } from "types/System";
+import { devtools } from "zustand/middleware";
 
 export interface SpaceTradersState {
     agent: Agent;
@@ -23,44 +24,46 @@ export interface SpaceTradersState {
     setShipCooldown: (shipSymbol: string, cooldown: Cooldown) => void;
 }
 
-export const useSpaceTradersStore = create((set) => ({
-    // Store
-    agent: {} as Agent,
-    contracts: [] as Contract[],
-    system: {} as System,
-    ships: [] as Ship[],
+export const useSpaceTradersStore = create(
+    devtools((set) => ({
+        // Store
+        agent: {} as Agent,
+        contracts: [] as Contract[],
+        system: {} as System,
+        ships: [] as Ship[],
 
-    // Actions
-    setAgent: (agent: Agent) => set({ agent }),
-    setContracts: (contracts: Contract[]) => set({ contracts }),
-    setSystem: (system: System) => set({ system }),
-    setSystemWaypoints: (waypoints: Waypoint[]) =>
-        set((state: SpaceTradersState) => ({
-            system: { ...state.system, waypoints },
-        })),
-    setShips: (ships: Ship[]) => set({ ships }),
-    setShipNav: (shipSymbol: string, nav: ShipNav) =>
-        set((state: SpaceTradersState) => ({
-            ships: state.ships.map((ship) =>
-                ship.symbol === shipSymbol ? { ...ship, nav } : ship,
-            ),
-        })),
-    setShipFuel: (shipSymbol: string, fuel: ShipFuel) =>
-        set((state: SpaceTradersState) => ({
-            ships: state.ships.map((ship) =>
-                ship.symbol === shipSymbol ? { ...ship, fuel } : ship,
-            ),
-        })),
-    setShipCargo: (shipSymbol: string, cargo: ShipCargo) =>
-        set((state: SpaceTradersState) => ({
-            ships: state.ships.map((ship) =>
-                ship.symbol === shipSymbol ? { ...ship, cargo } : ship,
-            ),
-        })),
-    setShipCooldown: (shipSymbol: string, cooldown: Cooldown) =>
-        set((state: SpaceTradersState) => ({
-            ships: state.ships.map((ship) =>
-                ship.symbol === shipSymbol ? { ...ship, cooldown } : ship,
-            ),
-        })),
-}));
+        // Actions
+        setAgent: (agent: Agent) => set({ agent }),
+        setContracts: (contracts: Contract[]) => set({ contracts }),
+        setSystem: (system: System) => set({ system }),
+        setSystemWaypoints: (waypoints: Waypoint[]) =>
+            set((state: SpaceTradersState) => ({
+                system: { ...state.system, waypoints },
+            })),
+        setShips: (ships: Ship[]) => set({ ships }),
+        setShipNav: (shipSymbol: string, nav: ShipNav) =>
+            set((state: SpaceTradersState) => ({
+                ships: state.ships.map((ship) =>
+                    ship.symbol === shipSymbol ? { ...ship, nav } : ship,
+                ),
+            })),
+        setShipFuel: (shipSymbol: string, fuel: ShipFuel) =>
+            set((state: SpaceTradersState) => ({
+                ships: state.ships.map((ship) =>
+                    ship.symbol === shipSymbol ? { ...ship, fuel } : ship,
+                ),
+            })),
+        setShipCargo: (shipSymbol: string, cargo: ShipCargo) =>
+            set((state: SpaceTradersState) => ({
+                ships: state.ships.map((ship) =>
+                    ship.symbol === shipSymbol ? { ...ship, cargo } : ship,
+                ),
+            })),
+        setShipCooldown: (shipSymbol: string, cooldown: Cooldown) =>
+            set((state: SpaceTradersState) => ({
+                ships: state.ships.map((ship) =>
+                    ship.symbol === shipSymbol ? { ...ship, cooldown } : ship,
+                ),
+            })),
+    })),
+);
